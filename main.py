@@ -22,6 +22,7 @@ import json
 import sys
 from operator import itemgetter
 from datetime import datetime
+import pprint
 
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -32,13 +33,17 @@ urlfetch.set_default_fetch_deadline(45)
 import jinja2
 import os
 
-MEMBERS_PER_REQUEST = 100
+MEMBERS_PER_REQUEST = 50
 
 CORE_ID = '37509528949522142'
 PUGZ_ID = '37511770385198092'
 PUGZ_ALIAS = 'PUGZ'
 OUTFIT_URL = 'http://census.soe.com/s:mb/get/ps2-beta/outfit/?alias=%s'
-MEMBER_URL = 'http://census.soe.com/get/ps2-beta/outfit_member/%i?c:limit=%i&c:start=%i&c:resolve=character(name,type.faction,experience,profile.active_name.en,stats_weekly.kills.faction,stats_weekly.facility_capture_count,stats_weekly.facility_defended_count,stats_weekly.play_time.class,stats_daily.facility_capture_count,stats_daily.facility_defended_count,stats_daily.play_time.class,stats_daily.kills.faction,stats_monthly.facility_capture_count,stats_monthly.facility_defended_count,stats_monthly.play_time.class,stats_monthly.kills.faction,,stats.facility_capture_count,stats.facility_defended_count,stats.play_time.class,stats.kills.faction,times.last_login),online_status'
+MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2-beta/outfit_member/%i?c:limit=%i&c:start=%i&c:resolve=character(name,type.faction,experience,profile.active_name.en,stats_weekly.kills.faction,stats_weekly.facility_capture_count,stats_weekly.facility_defended_count,stats_weekly.play_time.class,stats_daily.facility_capture_count,stats_daily.facility_defended_count,stats_daily.play_time.class,stats_daily.kills.faction,stats_monthly.facility_capture_count,stats_monthly.facility_defended_count,stats_monthly.play_time.class,stats_monthly.kills.faction,,stats.facility_capture_count,stats.facility_defended_count,stats.play_time.class,stats.kills.faction,times.last_login),online_status'
+
+NEW_OUTFIT_URL = 'http://census.soe.com/s:mb/get/ps2/outfit/?alias=%s'
+NEW_OUTFIT_CHARACTER_URL = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?c:limit=%i&c:start=%i'
+NEW_MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2/character/%s?c:resolve=stat,stat_by_faction,online_status'
 
 DEFAULT_SORT = 'joined'
 SORT_TYPE = {
@@ -89,6 +94,7 @@ ENEMY2 = {
 	'vs':'nc'
 	}
 	
+
 STAT_TYPES = ['stats_daily','stats_weekly','stats_monthly','stats']
 
 jinja_environment = jinja2.Environment(
@@ -229,6 +235,122 @@ class Test(webapp2.RequestHandler):
     def get(self):
 		self.response.out.write("test")
 
+
+class OutfitHandler(webapp2.RequestHandler):
+	def get(self):
+		
+		# get initial values 
+		outfit=self.request.get('outfit')
+		if (outfit == ""):
+			outfit = PUGZ_ALIAS
+			
+		sort=self.request.get('sort')
+		if (sort == ""):
+			sort = DEFAULT_SORT
+			
+		
+		# get values from URL
+		try :
+			url = OUTFIT_URL%(outfit)
+			fetch = urlfetch.fetch(url).content
+			outfit_data = json.loads(fetch)['outfit_list'][0]
+		except Exception as e :
+			self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
+			self.response.out.write(e)
+			return
+		
+		#self.response.out.write(pprint.pformat(outfit_data).replace('\n','<br>').replace('\t','&nbsp&nbsp&nbsp&nbsp'))
+		#self.response.out.write('<br><br><br>')
+		
+		members = {}
+		
+		for i in range(0,int(outfit_data['member_count']),MEMBERS_PER_REQUEST):
+			
+			#self.response.out.write("Outfit character info<br><br>")
+			
+			# get the next set of character ids from the api
+			try :
+				url = NEW_OUTFIT_CHARACTER_URL%(int(outfit_data['id']),MEMBERS_PER_REQUEST,i)
+				fetch = urlfetch.fetch(url).content
+				member_list = json.loads(fetch)['outfit_member_list']
+			except Exception as e :
+				self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
+				self.response.out.write(e)
+				return	
+			
+			member_id_list = []
+			
+			for member in member_list:
+				#self.response.out.write(pprint.pformat(member).replace('\n','<br>').replace(' ','&nbsp'))
+				#self.response.out.write('<br><br>')
+				
+				member_id_list.append(member['character_id'])
+				members[member['character_id']] = {'outfit':member}
+			
+			
+			#self.response.out.write("Character Info <br><br>")
+			#self.response.out.write(','.join(member_id_list)+'<br><br>')
+			
+			# Now get the character information
+			try :
+				url = NEW_MEMBER_URL%(','.join(member_id_list))
+				fetch = urlfetch.fetch(url).content
+				member_list = json.loads(fetch)['character_list']
+			except Exception as e :
+				self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
+				self.response.out.write(e)
+				return	
+			
+			for member in member_list:
+				#self.response.out.write(pprint.pformat(member).replace('\n','<br>').replace('\t','&nbsp&nbsp&nbsp&nbsp'))
+				#self.response.out.write('<br><br>')
+				
+				member_id_list.append(member['character_id'])
+				members[member['character_id']]['character'] = member
+			
+		
+		# now extract all the statistics required
+		
+		totalStats = {'online':0}
+		for stat in STAT_TYPES:
+			totalStats[stat] = {	
+				'tr':{'kills':0,'caps':0},
+				'vs':{'kills':0,'caps':0},
+				'nc':{'kills':0,'caps':0},
+				'defends':0} 
+		
+		for member in members.values():	
+			member['rank_int'] = int(member['character']['battle_rank']['value'])
+			member['last_login'] = int(member['character']['times']['last_login'])
+			member['last_login_string'] = datetime.fromtimestamp(int(member['character']['times']['last_login'])).__str__()
+			if (member['character']['online_status'] == '0'):
+				member['online_status'] = '1'
+				member['online_status_colour'] = '#FF0000'
+			if (member['character']['online_status'] == '9'):
+				member['online_status'] = '0'
+				member['online_status_colour'] = '#00FF00'
+				totalStats['online']+=1
+		
+		
+		faction = 'tr'
+		
+		template_values = {
+			'total_members': outfit_data['member_count'],
+			'name': outfit_data['name'],
+			'alias': outfit_data['alias'],
+			'members': members.values(),
+			'classes': CLASSES,
+			'offsets': BR_OFFSETS,
+			'totalStats' : totalStats,
+			'faction' : faction,
+			'enemy1' : ENEMY1[faction],
+			'enemy2' : ENEMY2[faction]
+		}
+		
+		template = jinja_environment.get_template('outfit_page.html')
+		self.response.out.write(template.render(template_values))
+
+
 		
 class Guestbook(webapp2.RequestHandler):
     def post(self):
@@ -247,4 +369,4 @@ class Guestbook(webapp2.RequestHandler):
 		self.redirect('/?' + urllib.urlencode({'guestbook_name': guestbook_name}))
 
 			
-app = webapp2.WSGIApplication([('/', MainHandler),('/sign', Guestbook),('/test', Test)], debug=True)
+app = webapp2.WSGIApplication([('/', MainHandler),('/sign', Guestbook),('/test', Test),('/new', OutfitHandler)], debug=True)
