@@ -1,0 +1,149 @@
+<html>
+	<head>
+		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+	</head>
+
+	<body>
+	
+	<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-41352458-1', 'x8-decisive-sylph-m.appspot.com');
+		ga('send', 'pageview');
+	</script>
+    
+	<table width=100%>
+		<tr>
+			<td><a href="./?outfit={{alias}}&sort=joined">Order By Outfit Join Date</a></td>
+			<td><a href="./?outfit={{alias}}&sort=battle_rank">Order By Battle Rank</a></td>
+			<td><a href="./?outfit={{alias}}&sort=outfit_rank">Order By Outfit Rank</a></td>
+			<td><a href="./?outfit={{alias}}&sort=last_login">Order By Last Login</a></td>
+		</tr>
+	</table>
+    <H1>Outfit Summary : {{ alias }}</H1>
+	<H4> {{ name }} </H4> 	
+	<H4> Faction : {{faction.upper()}} </H4>
+	<h2> {{alias}} : {{ total_members }} Members {{totalStats['online']}} Online Now.</h2>
+	<table width="100%">
+		<tr><td/><td><b>Daily</b></td><td><b>Weekly</b></td><td><b>Montly</b></td><td><b>All Time</b></td></tr>
+		<tr>
+			<td><b>{{enemy1.upper()}} Kills </b></td>
+			<td>{{totalStats['stats_daily'][enemy1]['kills']}}</td>
+			<td>{{totalStats['stats_weekly'][enemy1]['kills']}}</td>
+			<td>{{totalStats['stats_monthly'][enemy1]['kills']}}</td>
+			<td>{{totalStats['stats'][enemy1]['kills']}}</td>
+		</tr>
+		<tr>
+			<td><b>{{enemy2.upper()}} Kills </b></td>
+			<td>{{totalStats['stats_daily'][enemy2]['kills']}}</td>
+			<td>{{totalStats['stats_weekly'][enemy2]['kills']}}</td>
+			<td>{{totalStats['stats_monthly'][enemy2]['kills']}}</td>
+			<td>{{totalStats['stats'][enemy2]['kills']}}</td>
+		</tr>
+		<tr>
+			<td><b>{{enemy1.upper()}} Base Captures </b></td>
+			<td>{{totalStats['stats_daily'][enemy1]['caps']}}</td>
+			<td>{{totalStats['stats_weekly'][enemy1]['caps']}}</td>
+			<td>{{totalStats['stats_monthly'][enemy1]['caps']}}</td>
+			<td>{{totalStats['stats'][enemy1]['caps']}}</td>
+		</tr>
+		<tr>
+			<td><b>{{enemy2.upper()}} Base Captures </b></td>
+			<td>{{totalStats['stats_daily'][enemy2]['caps']}}</td>
+			<td>{{totalStats['stats_weekly'][enemy2]['caps']}}</td>
+			<td>{{totalStats['stats_monthly'][enemy2]['caps']}}</td>
+			<td>{{totalStats['stats'][enemy2]['caps']}}</td>
+		</tr>
+		<tr>
+			<td><b>Sucsessfull Base Defences </b></td>
+			<td>{{totalStats['stats_daily']['defends']}}</td>
+			<td>{{totalStats['stats_weekly']['defends']}}</td>
+			<td>{{totalStats['stats_monthly']['defends']}}</td>
+			<td>{{totalStats['stats']['defends']}}</td>
+		</tr>
+	</table>
+	<br>	
+	<table border='1' width=100%>
+		<tr>
+			<td> Outfit Rank </td>
+			<td> Rank </td>
+			<td> Name </td>
+			<td> Battle Rank </td>
+			<td> Last Online </td>
+			<td> Current Class </td>
+			<td> Stats </td>
+			<td> Most Played Classes (1 2 3)</td>
+			<td> {{enemy1.upper()}} Kills </td>
+			<td> {{enemy2.upper()}} Kills </td>
+			<td> {{enemy1.upper()}} Caps </td>
+			<td> {{enemy2.upper()}} Caps </td>
+			<td> Facility Defences </td>
+		</tr>
+	
+        {% for member in members %}
+	    <tr bgcolor={{ member['online_status_colour']}}> 
+		    <td rowspan=4>{{ member['rank']}}</td>
+			<td rowspan=4><img src="http://census.soe.com/img/ps2-beta/icon/{{ offsets[faction] + member['rank_int'] }}/item" width=64> </img></td>
+            <td rowspan=4>{{ member['character']['name']['first'] }}</td>
+			<td rowspan=4>{{ member['character']['experience'][0]['rank'] }}</td>
+			<td rowspan=4>{{ member['last_login_string'] }} </td>
+			<td rowspan=4><img src="http://census.soe.com/img/ps2-beta/icon/{{ classes[member['character']['profile']['active_name']['en']] }}/item"> </img></td>
+			<td>Daily</td>
+			<td>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['daily_class'][0][1] }}/item" width=32> </img>
+			    <img src="http://census.soe.com/img/ps2-beta/icon/{{ member['daily_class'][1][1] }}/item" width=32> </img>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['daily_class'][2][1] }}/item" width=32> </img>
+			</td>
+			<td>{{ member['character']['stats_daily']['kills']['faction'][enemy1] }}</td>
+			<td>{{ member['character']['stats_daily']['kills']['faction'][enemy2] }}</td>
+			<td>{{ member['character']['stats_daily']['facility_capture_count']['faction'][enemy1] }}</td>
+			<td>{{ member['character']['stats_daily']['facility_capture_count']['faction'][enemy2] }}</td>
+			<td>{{ member['character']['stats_daily']['facility_defended_count']['value'] }}</td>
+		</tr>
+		<tr bgcolor={{ member['online_status_colour']}}> 
+			<td>Weekly</td>
+			<td>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['weekly_class'][0][1] }}/item" width=32> </img>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['weekly_class'][1][1] }}/item" width=32> </img>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['weekly_class'][2][1] }}/item" width=32> </img>
+			</td>
+			<td>{{ member['character']['stats_weekly']['kills']['faction'][enemy1] }}</td>
+			<td>{{ member['character']['stats_weekly']['kills']['faction'][enemy2] }}</td>
+			<td>{{ member['character']['stats_weekly']['facility_capture_count']['faction'][enemy1] }}</td>
+			<td>{{ member['character']['stats_weekly']['facility_capture_count']['faction'][enemy2] }}</td>
+			<td>{{ member['character']['stats_weekly']['facility_defended_count']['value'] }}</td>
+		</tr>
+		<tr bgcolor={{ member['online_status_colour']}}> 
+			<td>Monthly</td>
+			<td>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['monthly_class'][0][1] }}/item" width=32> </img>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['monthly_class'][1][1] }}/item" width=32> </img>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['monthly_class'][2][1] }}/item" width=32> </img>
+			</td>
+			<td>{{ member['character']['stats_monthly']['kills']['faction'][enemy1] }}</td>
+			<td>{{ member['character']['stats_monthly']['kills']['faction'][enemy2] }}</td>
+			<td>{{ member['character']['stats_monthly']['facility_capture_count']['faction'][enemy1] }}</td>
+			<td>{{ member['character']['stats_monthly']['facility_capture_count']['faction'][enemy2] }}</td>
+			<td>{{ member['character']['stats_monthly']['facility_defended_count']['value'] }}</td>
+		</tr>
+			<tr bgcolor={{ member['online_status_colour']}}> 
+			<td>All Time</td>
+			<td>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['alltime_class'][0][1] }}/item" width=32> </img>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['alltime_class'][1][1] }}/item" width=32> </img>
+				<img src="http://census.soe.com/img/ps2-beta/icon/{{ member['alltime_class'][2][1] }}/item" width=32> </img>
+			</td>
+			<td>{{ member['character']['stats']['kills']['faction'][enemy1] }}</td>
+			<td>{{ member['character']['stats']['kills']['faction'][enemy2] }}</td>
+			<td>{{ member['character']['stats']['facility_capture_count']['faction'][enemy1] }}</td>
+			<td>{{ member['character']['stats']['facility_capture_count']['faction'][enemy2] }}</td>
+			<td>{{ member['character']['stats']['facility_defended_count']['value'] }}</td>
+		</tr>
+	    {% endfor %}
+    </table>
+
+  </body>
+</html>
