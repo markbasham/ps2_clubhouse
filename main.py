@@ -236,6 +236,11 @@ class Test(webapp2.RequestHandler):
 		self.response.out.write("test")
 
 
+class ClubhouseMainPage(webapp2.RequestHandler):
+	def get(self):
+		template = jinja_environment.get_template('clubhouse_main_page.html')
+		self.response.out.write(template.render())
+
 class OutfitHandler(webapp2.RequestHandler):
 	def get(self):
 		
@@ -369,4 +374,4 @@ class Guestbook(webapp2.RequestHandler):
 		self.redirect('/?' + urllib.urlencode({'guestbook_name': guestbook_name}))
 
 			
-app = webapp2.WSGIApplication([('/', MainHandler),('/sign', Guestbook),('/test', Test),('/new', OutfitHandler)], debug=True)
+app = webapp2.WSGIApplication([('/', MainHandler),('/sign', Guestbook),('/test', Test),('/new', OutfitHandler),('/main',ClubhouseMainPage)], debug=True)
