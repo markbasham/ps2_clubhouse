@@ -34,6 +34,7 @@ import jinja2
 import os
 
 MEMBERS_PER_REQUEST = 50
+CACHE_TIME_IN_SECONDS = 300
 
 CORE_ID = '37509528949522142'
 PUGZ_ID = '37511770385198092'
@@ -109,12 +110,35 @@ def get_playtime_class_icon_id(playtime):
 		clazzes.append((value,CLASSES_LOWER[clazz]))
 	clazzes.sort(reverse=True)
 	return clazzes
-	
+
+
 class Greeting(db.Model):
 	"""Models an individual Guestbook entry with an author, content, and date."""
 	author = db.StringProperty()
 	content = db.StringProperty(multiline=True)
 	date = db.DateTimeProperty(auto_now_add=True)
+
+class Outfit(db.Model):
+	"""Models an individual Character with appropriate data."""
+	id = db.IntegerProperty()
+	alias = db.StringProperty()
+	name = db.StringProperty()
+	faction = db.StringProperty()
+	members_total = db.StringProperty()
+	members_online = db.DateTimeProperty()
+	date = db.DateTimeProperty(auto_now_add=True)
+
+class Character(db.Model):
+	"""Models an individual Character with appropriate data."""
+	id 					= db.IntegerProperty()
+	name 				= db.StringProperty()
+	battle_rank 		= db.IntegerProperty()
+	outfit_rank 		= db.IntegerProperty()
+	outfit_rank_name 	= db.StringProperty()
+	last_online 		= db.DateTimeProperty()
+	online_status 		= db.BooleanProperly()
+	date 				= db.DateTimeProperty(auto_now_add=True)
+
 
 def guestbook_key(guestbook_name=None):
 	"""Constructs a Datastore key for a Guestbook entity with guestbook_name."""
@@ -242,6 +266,119 @@ class ClubhouseMainPage(webapp2.RequestHandler):
 		self.response.out.write(template.render())
 
 class OutfitHandler(webapp2.RequestHandler):
+	
+	def generate_outfit_data(self, outfit_alias):
+		outfit = Outfit()
+		
+		# get values from URL
+		try :
+			url = NEW_OUTFIT_URL%(outfit)
+			fetch = urlfetch.fetch(url).content
+			outfit_data = json.loads(fetch)['outfit_list'][0]
+		except Exception as e :
+			return None
+		
+		outfit.alias 			= outfit_alias
+		outfit.members_total 	= outfit_data['member_count']
+		outfit.name 			= outfit_data['name']
+		
+		outfit.put()
+		
+		# Now sort out the members themselves
+		members = {}
+		
+		for i in range(0,int(outfit_data['member_count']),MEMBERS_PER_REQUEST):
+			
+			#self.response.out.write("Outfit character info<br><br>")
+			
+			# get the next set of character ids from the api
+			try :
+				url = NEW_OUTFIT_CHARACTER_URL%(int(outfit_data['id']),MEMBERS_PER_REQUEST,i)
+				fetch = urlfetch.fetch(url).content
+				member_list = json.loads(fetch)['outfit_member_list']
+			except Exception as e :
+				self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
+				self.response.out.write(e)
+				return	
+			
+			member_id_list = []
+			
+			for member in member_list:
+				#self.response.out.write(pprint.pformat(member).replace('\n','<br>').replace(' ','&nbsp'))
+				#self.response.out.write('<br><br>')
+				
+				member_id_list.append(member['character_id'])
+				members[member['character_id']] = {'outfit':member}
+			
+			
+			#self.response.out.write("Character Info <br><br>")
+			#self.response.out.write(','.join(member_id_list)+'<br><br>')
+			
+			# Now get the character information
+			try :
+				url = NEW_MEMBER_URL%(','.join(member_id_list))
+				fetch = urlfetch.fetch(url).content
+				member_list = json.loads(fetch)['character_list']
+			except Exception as e :
+				self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
+				self.response.out.write(e)
+				return	
+			
+			for member in member_list:
+				#self.response.out.write(pprint.pformat(member).replace('\n','<br>').replace('\t','&nbsp&nbsp&nbsp&nbsp'))
+				#self.response.out.write('<br><br>')
+				
+				member_id_list.append(member['character_id'])
+				members[member['character_id']]['character'] = member
+			
+		
+		# now extract all the statistics required
+		
+		totalStats = {'online':0}
+		for stat in STAT_TYPES:
+			totalStats[stat] = {	
+				'tr':{'kills':0,'caps':0},
+				'vs':{'kills':0,'caps':0},
+				'nc':{'kills':0,'caps':0},
+				'defends':0} 
+		
+		
+		for member in members.values():	
+			char = Character(parent=outfit)
+			char.battle_rank = int(member['character']['battle_rank']['value'])
+			char.last_online = datetime.fromtimestamp(int(member['character']['times']['last_login']))
+			if (member['character']['online_status'] == '0'):
+				char.online_status = False
+			if (member['character']['online_status'] == '9'):
+				char.online_status = True
+				totalStats['online']+=1
+			char.put()
+		
+		outfit.members_online = totalStats['online']
+		outfit.put()
+
+	
+	def refresh_outfit_data(self, outfit_alias):
+		# try to get the outfits data
+		q = Outfit.all()
+		q.filter("alias =", outfit_alias)
+		
+		outfit = None
+		
+		now = datetime.datetime.now()
+		
+		for o in q.run(limit=5):
+			if (now - o.date).total_seconds() > CACHE_TIME_IN_SECONDS :
+				o.delete()
+			else :
+				outfit = o
+		
+		# so now we have the outfit data, or null, if we have null, then we need to create new outfit data
+		if outfit == None :
+			outfit = generate_outfit_data(outfit_alias)
+		
+		
+	
 	def get(self):
 		
 		# get initial values 
@@ -355,7 +492,6 @@ class OutfitHandler(webapp2.RequestHandler):
 		template = jinja_environment.get_template('outfit_page.html')
 		self.response.out.write(template.render(template_values))
 
-
 		
 class Guestbook(webapp2.RequestHandler):
     def post(self):
@@ -374,4 +510,5 @@ class Guestbook(webapp2.RequestHandler):
 		self.redirect('/?' + urllib.urlencode({'guestbook_name': guestbook_name}))
 
 			
-app = webapp2.WSGIApplication([('/', MainHandler),('/sign', Guestbook),('/test', Test),('/new', OutfitHandler),('/main',ClubhouseMainPage)], debug=True)
+app = webapp2.WSGIApplication([('/', MainHandler),('/sign', Guestbook),
+							('/test', Test),('/new', OutfitHandler),('/main',ClubhouseMainPage)], debug=True)
