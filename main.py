@@ -23,6 +23,7 @@ import sys
 from operator import itemgetter
 from datetime import datetime
 import pprint
+import logging
 
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -120,13 +121,13 @@ class Greeting(db.Model):
 
 class Outfit(db.Model):
 	"""Models an individual Character with appropriate data."""
-	id = db.IntegerProperty()
-	alias = db.StringProperty()
-	name = db.StringProperty()
-	faction = db.StringProperty()
-	members_total = db.StringProperty()
-	members_online = db.DateTimeProperty()
-	date = db.DateTimeProperty(auto_now_add=True)
+	id 				= db.IntegerProperty()
+	alias 			= db.StringProperty()
+	name 			= db.StringProperty()
+	faction 		= db.StringProperty()
+	members_total 	= db.StringProperty()
+	members_online 	= db.IntegerProperty()
+	date 			= db.DateTimeProperty(auto_now_add=True)
 
 class Character(db.Model):
 	"""Models an individual Character with appropriate data."""
@@ -136,7 +137,8 @@ class Character(db.Model):
 	outfit_rank 		= db.IntegerProperty()
 	outfit_rank_name 	= db.StringProperty()
 	last_online 		= db.DateTimeProperty()
-	online_status 		= db.BooleanProperly()
+	online_status 		= db.BooleanProperty()
+	outfit_join			= db.DateTimeProperty()
 	date 				= db.DateTimeProperty(auto_now_add=True)
 
 
@@ -268,11 +270,13 @@ class ClubhouseMainPage(webapp2.RequestHandler):
 class OutfitHandler(webapp2.RequestHandler):
 	
 	def generate_outfit_data(self, outfit_alias):
+		logging.info("Calling generate_outfit **************************************************")
 		outfit = Outfit()
+		outfit_data = None
 		
 		# get values from URL
 		try :
-			url = NEW_OUTFIT_URL%(outfit)
+			url = NEW_OUTFIT_URL%(outfit_alias)
 			fetch = urlfetch.fetch(url).content
 			outfit_data = json.loads(fetch)['outfit_list'][0]
 		except Exception as e :
@@ -283,6 +287,11 @@ class OutfitHandler(webapp2.RequestHandler):
 		outfit.name 			= outfit_data['name']
 		
 		outfit.put()
+		
+		logging.info(outfit_data)
+		logging.info(outfit)
+		
+		logging.info("outfit data obtained")
 		
 		# Now sort out the members themselves
 		members = {}
@@ -342,11 +351,20 @@ class OutfitHandler(webapp2.RequestHandler):
 				'nc':{'kills':0,'caps':0},
 				'defends':0} 
 		
+		logging.info("total Stats:")
+		logging.info(totalStats)
 		
 		for member in members.values():	
 			char = Character(parent=outfit)
+			logging.info("Character info")
+			logging.info(member)
+			char.name = member['character']['name']['first']
+			char.id = int(member['outfit']['character_id'])
+			char.outfit_rank = int(member['outfit']['rank_ordinal'])
+			char.outfit_rank_name = member['outfit']['rank']
 			char.battle_rank = int(member['character']['battle_rank']['value'])
 			char.last_online = datetime.fromtimestamp(int(member['character']['times']['last_login']))
+			char.outfit_join = datetime.fromtimestamp(int(member['outfit']['member_since']))
 			if (member['character']['online_status'] == '0'):
 				char.online_status = False
 			if (member['character']['online_status'] == '9'):
@@ -358,14 +376,14 @@ class OutfitHandler(webapp2.RequestHandler):
 		outfit.put()
 
 	
-	def refresh_outfit_data(self, outfit_alias):
+	def get_outfit_data(self, outfit_alias):
 		# try to get the outfits data
 		q = Outfit.all()
 		q.filter("alias =", outfit_alias)
 		
 		outfit = None
 		
-		now = datetime.datetime.now()
+		now = datetime.now()
 		
 		for o in q.run(limit=5):
 			if (now - o.date).total_seconds() > CACHE_TIME_IN_SECONDS :
@@ -375,9 +393,9 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		# so now we have the outfit data, or null, if we have null, then we need to create new outfit data
 		if outfit == None :
-			outfit = generate_outfit_data(outfit_alias)
+			outfit = self.generate_outfit_data(outfit_alias)
 		
-		
+		return outfit
 	
 	def get(self):
 		
@@ -391,6 +409,9 @@ class OutfitHandler(webapp2.RequestHandler):
 			sort = DEFAULT_SORT
 			
 		
+		# get the outfit data
+		oo = self.generate_outfit_data(outfit)
+		
 		# get values from URL
 		try :
 			url = OUTFIT_URL%(outfit)
@@ -403,7 +424,7 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		#self.response.out.write(pprint.pformat(outfit_data).replace('\n','<br>').replace('\t','&nbsp&nbsp&nbsp&nbsp'))
 		#self.response.out.write('<br><br><br>')
-		
+		self.response.out.write("Test")
 		members = {}
 		
 		for i in range(0,int(outfit_data['member_count']),MEMBERS_PER_REQUEST):
