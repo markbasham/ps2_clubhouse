@@ -35,7 +35,7 @@ import jinja2
 import os
 
 MEMBERS_PER_REQUEST = 50
-CACHE_TIME_IN_SECONDS = 300
+CACHE_TIME_IN_SECONDS = 60
 
 CORE_ID = '37509528949522142'
 PUGZ_ID = '37511770385198092'
@@ -270,7 +270,7 @@ class ClubhouseMainPage(webapp2.RequestHandler):
 class OutfitHandler(webapp2.RequestHandler):
 	
 	def generate_outfit_data(self, outfit_alias):
-		logging.info("Calling generate_outfit **************************************************")
+		#logging.info("Calling generate_outfit **************************************************")
 		outfit = Outfit()
 		outfit_data = None
 		
@@ -288,10 +288,10 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		outfit.put()
 		
-		logging.info(outfit_data)
-		logging.info(outfit)
+		#logging.info(outfit_data)
+		#logging.info(outfit)
 		
-		logging.info("outfit data obtained")
+		#logging.info("outfit data obtained")
 		
 		# Now sort out the members themselves
 		members = {}
@@ -351,13 +351,13 @@ class OutfitHandler(webapp2.RequestHandler):
 				'nc':{'kills':0,'caps':0},
 				'defends':0} 
 		
-		logging.info("total Stats:")
-		logging.info(totalStats)
+		#logging.info("total Stats:")
+		#logging.info(totalStats)
 		
 		for member in members.values():	
 			char = Character(parent=outfit)
-			logging.info("Character info")
-			logging.info(member)
+			#logging.info("Character info")
+			#logging.info(member)
 			char.name = member['character']['name']['first']
 			char.id = int(member['outfit']['character_id'])
 			char.outfit_rank = int(member['outfit']['rank_ordinal'])
@@ -385,14 +385,27 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		now = datetime.now()
 		
+		logging.info("Trying to retrieve outfit data for %s ****************************************************"% (outfit_alias))
+		
 		for o in q.run(limit=5):
 			if (now - o.date).total_seconds() > CACHE_TIME_IN_SECONDS :
+				logging.info("Deleting old outfit %s" % (o.name))
+				# we need to delete all the characgter entries which are associated with this
+				cq = Character.all()
+				cq.ancestor(o)
+				
+				for char in cq.run():
+					logging.info("Deleting character %s", char.name)
+					char.delete()
+
 				o.delete()
 			else :
+				logging.info("Appropriate Cached outfit information found")
 				outfit = o
 		
 		# so now we have the outfit data, or null, if we have null, then we need to create new outfit data
 		if outfit == None :
+			logging.info("No Cached outfit information found, requesting new data from API")
 			outfit = self.generate_outfit_data(outfit_alias)
 		
 		return outfit
@@ -410,7 +423,7 @@ class OutfitHandler(webapp2.RequestHandler):
 			
 		
 		# get the outfit data
-		oo = self.generate_outfit_data(outfit)
+		oo = self.get_outfit_data(outfit)
 		
 		# get values from URL
 		try :
