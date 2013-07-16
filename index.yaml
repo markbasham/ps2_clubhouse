@@ -10,6 +10,49 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+- kind: Character
+  ancestor: yes
+  properties:
+  - name: assist_count
+
+- kind: Character
+  ancestor: yes
+  properties:
+  - name: assist_count_daily
+
+- kind: Character
+  ancestor: yes
+  properties:
+  - name: battle_rank
+
+- kind: Character
+  ancestor: yes
+  properties:
+  - name: name
+
+- kind: Character
+  ancestor: yes
+  properties:
+  - name: outfit_rank
+
+- kind: Character
+  ancestor: yes
+  properties:
+  - name: outfit_rank
+  - name: battle_rank
+
+- kind: Character
+  ancestor: yes
+  properties:
+  - name: outfit_rank
+  - name: battle_rank
+    direction: desc
+
+- kind: Character
+  ancestor: yes
+  properties:
+  - name: revenge_count_tr
+
 - kind: Greeting
   ancestor: yes
   properties:
