@@ -23,6 +23,12 @@ indexes:
 - kind: Character
   ancestor: yes
   properties:
+  - name: assist_count_forever
+    direction: desc
+
+- kind: Character
+  ancestor: yes
+  properties:
   - name: battle_rank
 
 - kind: Character

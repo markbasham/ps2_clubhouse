@@ -28,6 +28,7 @@ import logging
 from google.appengine.ext import db
 from google.appengine.api import users
 from google.appengine.api import urlfetch
+from google.appengine.api import memcache
 
 urlfetch.set_default_fetch_deadline(45)
 
@@ -35,7 +36,7 @@ import jinja2
 import os
 
 MEMBERS_PER_REQUEST = 50
-CACHE_TIME_IN_SECONDS = 60
+CACHE_TIME_IN_SECONDS = 300
 
 CORE_ID = '37509528949522142'
 PUGZ_ID = '37511770385198092'
@@ -103,6 +104,7 @@ jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
 def get_playtime_class_icon_id(playtime):
+	logging.info(">>>> get_playtime_class_icon_id")
 	max = 0
 	id = 0
 	clazzes = []
@@ -110,6 +112,7 @@ def get_playtime_class_icon_id(playtime):
 		value = int(playtime['class'][clazz]['value'])
 		clazzes.append((value,CLASSES_LOWER[clazz]))
 	clazzes.sort(reverse=True)
+	logging.info("<<<< get_playtime_class_icon_id")
 	return clazzes
 
 
@@ -197,167 +200,167 @@ class Character(db.Model):
 	facility_defended_count_one_life_max		= db.IntegerProperty()
 	
 	# Stats per faction
-	weapon_killed_by_nc_daily					= db.IntegerProperty(long)
-	weapon_killed_by_nc_weekly					= db.IntegerProperty(long)
-	weapon_killed_by_nc_montly					= db.IntegerProperty(long)
-	weapon_killed_by_nc_forever					= db.IntegerProperty(long)
-	weapon_killed_by_nc_one_life_max			= db.IntegerProperty(long)
+	weapon_killed_by_nc_daily					= db.IntegerProperty()
+	weapon_killed_by_nc_weekly					= db.IntegerProperty()
+	weapon_killed_by_nc_montly					= db.IntegerProperty()
+	weapon_killed_by_nc_forever					= db.IntegerProperty()
+	weapon_killed_by_nc_one_life_max			= db.IntegerProperty()
 	
-	weapon_killed_by_tr_daily					= db.IntegerProperty(long)
-	weapon_killed_by_tr_weekly					= db.IntegerProperty(long)
-	weapon_killed_by_tr_montly					= db.IntegerProperty(long)
-	weapon_killed_by_tr_forever					= db.IntegerProperty(long)
-	weapon_killed_by_tr_one_life_max			= db.IntegerProperty(long)
+	weapon_killed_by_tr_daily					= db.IntegerProperty()
+	weapon_killed_by_tr_weekly					= db.IntegerProperty()
+	weapon_killed_by_tr_montly					= db.IntegerProperty()
+	weapon_killed_by_tr_forever					= db.IntegerProperty()
+	weapon_killed_by_tr_one_life_max			= db.IntegerProperty()
 	
-	weapon_killed_by_vs_daily					= db.IntegerProperty(long)
-	weapon_killed_by_vs_weekly					= db.IntegerProperty(long)
-	weapon_killed_by_vs_montly					= db.IntegerProperty(long)
-	weapon_killed_by_vs_forever					= db.IntegerProperty(long)
-	weapon_killed_by_vs_one_life_max			= db.IntegerProperty(long)
+	weapon_killed_by_vs_daily					= db.IntegerProperty()
+	weapon_killed_by_vs_weekly					= db.IntegerProperty()
+	weapon_killed_by_vs_montly					= db.IntegerProperty()
+	weapon_killed_by_vs_forever					= db.IntegerProperty()
+	weapon_killed_by_vs_one_life_max			= db.IntegerProperty()
 	
-	domination_count_nc_daily					= db.IntegerProperty(long)
-	domination_count_nc_weekly					= db.IntegerProperty(long)
-	domination_count_nc_montly					= db.IntegerProperty(long)
-	domination_count_nc_forever					= db.IntegerProperty(long)
-	domination_count_nc_one_life_max			= db.IntegerProperty(long)
+	domination_count_nc_daily					= db.IntegerProperty()
+	domination_count_nc_weekly					= db.IntegerProperty()
+	domination_count_nc_montly					= db.IntegerProperty()
+	domination_count_nc_forever					= db.IntegerProperty()
+	domination_count_nc_one_life_max			= db.IntegerProperty()
 	
-	domination_count_tr_daily					= db.IntegerProperty(long)
-	domination_count_tr_weekly					= db.IntegerProperty(long)
-	domination_count_tr_montly					= db.IntegerProperty(long)
-	domination_count_tr_forever					= db.IntegerProperty(long)
-	domination_count_tr_one_life_max			= db.IntegerProperty(long)
+	domination_count_tr_daily					= db.IntegerProperty()
+	domination_count_tr_weekly					= db.IntegerProperty()
+	domination_count_tr_montly					= db.IntegerProperty()
+	domination_count_tr_forever					= db.IntegerProperty()
+	domination_count_tr_one_life_max			= db.IntegerProperty()
 	
-	domination_count_vs_daily					= db.IntegerProperty(long)
-	domination_count_vs_weekly					= db.IntegerProperty(long)
-	domination_count_vs_montly					= db.IntegerProperty(long)
-	domination_count_vs_forever					= db.IntegerProperty(long)
-	domination_count_vs_one_life_max			= db.IntegerProperty(long)
+	domination_count_vs_daily					= db.IntegerProperty()
+	domination_count_vs_weekly					= db.IntegerProperty()
+	domination_count_vs_montly					= db.IntegerProperty()
+	domination_count_vs_forever					= db.IntegerProperty()
+	domination_count_vs_one_life_max			= db.IntegerProperty()
 	
-	revenge_count_nc_daily						= db.IntegerProperty(long)
-	revenge_count_nc_weekly						= db.IntegerProperty(long)
-	revenge_count_nc_montly						= db.IntegerProperty(long)
-	revenge_count_nc_forever					= db.IntegerProperty(long)
-	revenge_count_nc_one_life_max				= db.IntegerProperty(long)
+	revenge_count_nc_daily						= db.IntegerProperty()
+	revenge_count_nc_weekly						= db.IntegerProperty()
+	revenge_count_nc_montly						= db.IntegerProperty()
+	revenge_count_nc_forever					= db.IntegerProperty()
+	revenge_count_nc_one_life_max				= db.IntegerProperty()
 	
-	revenge_count_tr_daily						= db.IntegerProperty(long)
-	revenge_count_tr_weekly						= db.IntegerProperty(long)
-	revenge_count_tr_montly						= db.IntegerProperty(long)
-	revenge_count_tr_forever					= db.IntegerProperty(long)
-	revenge_count_tr_one_life_max				= db.IntegerProperty(long)
+	revenge_count_tr_daily						= db.IntegerProperty()
+	revenge_count_tr_weekly						= db.IntegerProperty()
+	revenge_count_tr_montly						= db.IntegerProperty()
+	revenge_count_tr_forever					= db.IntegerProperty()
+	revenge_count_tr_one_life_max				= db.IntegerProperty()
 	
-	revenge_count_vs_daily						= db.IntegerProperty(long)
-	revenge_count_vs_weekly						= db.IntegerProperty(long)
-	revenge_count_vs_montly						= db.IntegerProperty(long)
-	revenge_count_vs_forever					= db.IntegerProperty(long)
-	revenge_count_vs_one_life_max				= db.IntegerProperty(long)
+	revenge_count_vs_daily						= db.IntegerProperty()
+	revenge_count_vs_weekly						= db.IntegerProperty()
+	revenge_count_vs_montly						= db.IntegerProperty()
+	revenge_count_vs_forever					= db.IntegerProperty()
+	revenge_count_vs_one_life_max				= db.IntegerProperty()
 	
-	weapon_vehicle_kills_nc_daily				= db.IntegerProperty(long)
-	weapon_vehicle_kills_nc_weekly				= db.IntegerProperty(long)
-	weapon_vehicle_kills_nc_montly				= db.IntegerProperty(long)
-	weapon_vehicle_kills_nc_forever				= db.IntegerProperty(long)
-	weapon_vehicle_kills_nc_one_life_max		= db.IntegerProperty(long)
+	weapon_vehicle_kills_nc_daily				= db.IntegerProperty()
+	weapon_vehicle_kills_nc_weekly				= db.IntegerProperty()
+	weapon_vehicle_kills_nc_montly				= db.IntegerProperty()
+	weapon_vehicle_kills_nc_forever				= db.IntegerProperty()
+	weapon_vehicle_kills_nc_one_life_max		= db.IntegerProperty()
 	
-	weapon_vehicle_kills_tr_daily				= db.IntegerProperty(long)
-	weapon_vehicle_kills_tr_weekly				= db.IntegerProperty(long)
-	weapon_vehicle_kills_tr_montly				= db.IntegerProperty(long)
-	weapon_vehicle_kills_tr_forever				= db.IntegerProperty(long)
-	weapon_vehicle_kills_tr_one_life_max		= db.IntegerProperty(long)
+	weapon_vehicle_kills_tr_daily				= db.IntegerProperty()
+	weapon_vehicle_kills_tr_weekly				= db.IntegerProperty()
+	weapon_vehicle_kills_tr_montly				= db.IntegerProperty()
+	weapon_vehicle_kills_tr_forever				= db.IntegerProperty()
+	weapon_vehicle_kills_tr_one_life_max		= db.IntegerProperty()
 	
-	weapon_vehicle_kills_vs_daily				= db.IntegerProperty(long)
-	weapon_vehicle_kills_vs_weekly				= db.IntegerProperty(long)
-	weapon_vehicle_kills_vs_montly				= db.IntegerProperty(long)
-	weapon_vehicle_kills_vs_forever				= db.IntegerProperty(long)
-	weapon_vehicle_kills_vs_one_life_max		= db.IntegerProperty(long)
+	weapon_vehicle_kills_vs_daily				= db.IntegerProperty()
+	weapon_vehicle_kills_vs_weekly				= db.IntegerProperty()
+	weapon_vehicle_kills_vs_montly				= db.IntegerProperty()
+	weapon_vehicle_kills_vs_forever				= db.IntegerProperty()
+	weapon_vehicle_kills_vs_one_life_max		= db.IntegerProperty()
 	
-	weapon_damage_taken_by_nc_daily				= db.IntegerProperty(long)
-	weapon_damage_taken_by_nc_weekly			= db.IntegerProperty(long)
-	weapon_damage_taken_by_nc_montly			= db.IntegerProperty(long)
-	weapon_damage_taken_by_nc_forever			= db.IntegerProperty(long)
-	weapon_damage_taken_by_nc_one_life_max		= db.IntegerProperty(long)
+	weapon_damage_taken_by_nc_daily				= db.IntegerProperty()
+	weapon_damage_taken_by_nc_weekly			= db.IntegerProperty()
+	weapon_damage_taken_by_nc_montly			= db.IntegerProperty()
+	weapon_damage_taken_by_nc_forever			= db.IntegerProperty()
+	weapon_damage_taken_by_nc_one_life_max		= db.IntegerProperty()
 	
-	weapon_damage_taken_by_tr_daily				= db.IntegerProperty(long)
-	weapon_damage_taken_by_tr_weekly			= db.IntegerProperty(long)
-	weapon_damage_taken_by_tr_montly			= db.IntegerProperty(long)
-	weapon_damage_taken_by_tr_forever			= db.IntegerProperty(long)
-	weapon_damage_taken_by_tr_one_life_max		= db.IntegerProperty(long)
+	weapon_damage_taken_by_tr_daily				= db.IntegerProperty()
+	weapon_damage_taken_by_tr_weekly			= db.IntegerProperty()
+	weapon_damage_taken_by_tr_montly			= db.IntegerProperty()
+	weapon_damage_taken_by_tr_forever			= db.IntegerProperty()
+	weapon_damage_taken_by_tr_one_life_max		= db.IntegerProperty()
 	
-	weapon_damage_taken_by_vs_daily				= db.IntegerProperty(long)
-	weapon_damage_taken_by_vs_weekly			= db.IntegerProperty(long)
-	weapon_damage_taken_by_vs_montly			= db.IntegerProperty(long)
-	weapon_damage_taken_by_vs_forever			= db.IntegerProperty(long)
-	weapon_damage_taken_by_vs_one_life_max		= db.IntegerProperty(long)
+	weapon_damage_taken_by_vs_daily				= db.IntegerProperty()
+	weapon_damage_taken_by_vs_weekly			= db.IntegerProperty()
+	weapon_damage_taken_by_vs_montly			= db.IntegerProperty()
+	weapon_damage_taken_by_vs_forever			= db.IntegerProperty()
+	weapon_damage_taken_by_vs_one_life_max		= db.IntegerProperty()
 	
-	weapon_kills_nc_daily						= db.IntegerProperty(long)
-	weapon_kills_nc_weekly						= db.IntegerProperty(long)
-	weapon_kills_nc_montly						= db.IntegerProperty(long)
-	weapon_kills_nc_forever						= db.IntegerProperty(long)
-	weapon_kills_nc_one_life_max				= db.IntegerProperty(long)
+	weapon_kills_nc_daily						= db.IntegerProperty()
+	weapon_kills_nc_weekly						= db.IntegerProperty()
+	weapon_kills_nc_montly						= db.IntegerProperty()
+	weapon_kills_nc_forever						= db.IntegerProperty()
+	weapon_kills_nc_one_life_max				= db.IntegerProperty()
 	
-	weapon_kills_tr_daily						= db.IntegerProperty(long)
-	weapon_kills_tr_weekly						= db.IntegerProperty(long)
-	weapon_kills_tr_montly						= db.IntegerProperty(long)
-	weapon_kills_tr_forever						= db.IntegerProperty(long)
-	weapon_kills_tr_one_life_max				= db.IntegerProperty(long)
+	weapon_kills_tr_daily						= db.IntegerProperty()
+	weapon_kills_tr_weekly						= db.IntegerProperty()
+	weapon_kills_tr_montly						= db.IntegerProperty()
+	weapon_kills_tr_forever						= db.IntegerProperty()
+	weapon_kills_tr_one_life_max				= db.IntegerProperty()
 	
-	weapon_kills_vs_daily						= db.IntegerProperty(long)
-	weapon_kills_vs_weekly						= db.IntegerProperty(long)
-	weapon_kills_vs_montly						= db.IntegerProperty(long)
-	weapon_kills_vs_forever						= db.IntegerProperty(long)
-	weapon_kills_vs_one_life_max				= db.IntegerProperty(long)
+	weapon_kills_vs_daily						= db.IntegerProperty()
+	weapon_kills_vs_weekly						= db.IntegerProperty()
+	weapon_kills_vs_montly						= db.IntegerProperty()
+	weapon_kills_vs_forever						= db.IntegerProperty()
+	weapon_kills_vs_one_life_max				= db.IntegerProperty()
 	
-	weapon_damage_given_nc_daily				= db.IntegerProperty(long)
-	weapon_damage_given_nc_weekly				= db.IntegerProperty(long)
-	weapon_damage_given_nc_montly				= db.IntegerProperty(long)
-	weapon_damage_given_nc_forever				= db.IntegerProperty(long)
-	weapon_damage_given_nc_one_life_max			= db.IntegerProperty(long)
+	weapon_damage_given_nc_daily				= db.IntegerProperty()
+	weapon_damage_given_nc_weekly				= db.IntegerProperty()
+	weapon_damage_given_nc_montly				= db.IntegerProperty()
+	weapon_damage_given_nc_forever				= db.IntegerProperty()
+	weapon_damage_given_nc_one_life_max			= db.IntegerProperty()
 	
-	weapon_damage_given_tr_daily				= db.IntegerProperty(long)
-	weapon_damage_given_tr_weekly				= db.IntegerProperty(long)
-	weapon_damage_given_tr_montly				= db.IntegerProperty(long)
-	weapon_damage_given_tr_forever				= db.IntegerProperty(long)
-	weapon_damage_given_tr_one_life_max			= db.IntegerProperty(long)
+	weapon_damage_given_tr_daily				= db.IntegerProperty()
+	weapon_damage_given_tr_weekly				= db.IntegerProperty()
+	weapon_damage_given_tr_montly				= db.IntegerProperty()
+	weapon_damage_given_tr_forever				= db.IntegerProperty()
+	weapon_damage_given_tr_one_life_max			= db.IntegerProperty()
 	
-	weapon_damage_given_vs_daily				= db.IntegerProperty(long)
-	weapon_damage_given_vs_weekly				= db.IntegerProperty(long)
-	weapon_damage_given_vs_montly				= db.IntegerProperty(long)
-	weapon_damage_given_vs_forever				= db.IntegerProperty(long)
-	weapon_damage_given_vs_one_life_max			= db.IntegerProperty(long)
+	weapon_damage_given_vs_daily				= db.IntegerProperty()
+	weapon_damage_given_vs_weekly				= db.IntegerProperty()
+	weapon_damage_given_vs_montly				= db.IntegerProperty()
+	weapon_damage_given_vs_forever				= db.IntegerProperty()
+	weapon_damage_given_vs_one_life_max			= db.IntegerProperty()
 	
-	facility_capture_count_nc_daily				= db.IntegerProperty(long)
-	facility_capture_count_nc_weekly			= db.IntegerProperty(long)
-	facility_capture_count_nc_montly			= db.IntegerProperty(long)
-	facility_capture_count_nc_forever			= db.IntegerProperty(long)
-	facility_capture_count_nc_one_life_max		= db.IntegerProperty(long)
+	facility_capture_count_nc_daily				= db.IntegerProperty()
+	facility_capture_count_nc_weekly			= db.IntegerProperty()
+	facility_capture_count_nc_montly			= db.IntegerProperty()
+	facility_capture_count_nc_forever			= db.IntegerProperty()
+	facility_capture_count_nc_one_life_max		= db.IntegerProperty()
 	
-	facility_capture_count_tr_daily				= db.IntegerProperty(long)
-	facility_capture_count_tr_weekly			= db.IntegerProperty(long)
-	facility_capture_count_tr_montly			= db.IntegerProperty(long)
-	facility_capture_count_tr_forever			= db.IntegerProperty(long)
-	facility_capture_count_tr_one_life_max		= db.IntegerProperty(long)
+	facility_capture_count_tr_daily				= db.IntegerProperty()
+	facility_capture_count_tr_weekly			= db.IntegerProperty()
+	facility_capture_count_tr_montly			= db.IntegerProperty()
+	facility_capture_count_tr_forever			= db.IntegerProperty()
+	facility_capture_count_tr_one_life_max		= db.IntegerProperty()
 	
-	facility_capture_count_vs_daily				= db.IntegerProperty(long)
-	facility_capture_count_vs_weekly			= db.IntegerProperty(long)
-	facility_capture_count_vs_montly			= db.IntegerProperty(long)
-	facility_capture_count_vs_forever			= db.IntegerProperty(long)
-	facility_capture_count_vs_one_life_max		= db.IntegerProperty(long)
+	facility_capture_count_vs_daily				= db.IntegerProperty()
+	facility_capture_count_vs_weekly			= db.IntegerProperty()
+	facility_capture_count_vs_montly			= db.IntegerProperty()
+	facility_capture_count_vs_forever			= db.IntegerProperty()
+	facility_capture_count_vs_one_life_max		= db.IntegerProperty()
 	
-	weapon_headshots_nc_daily					= db.IntegerProperty(long)
-	weapon_headshots_nc_weekly					= db.IntegerProperty(long)
-	weapon_headshots_nc_montly					= db.IntegerProperty(long)
-	weapon_headshots_nc_forever					= db.IntegerProperty(long)
-	weapon_headshots_nc_one_life_max			= db.IntegerProperty(long)
+	weapon_headshots_nc_daily					= db.IntegerProperty()
+	weapon_headshots_nc_weekly					= db.IntegerProperty()
+	weapon_headshots_nc_montly					= db.IntegerProperty()
+	weapon_headshots_nc_forever					= db.IntegerProperty()
+	weapon_headshots_nc_one_life_max			= db.IntegerProperty()
 	
-	weapon_headshots_tr_daily					= db.IntegerProperty(long)
-	weapon_headshots_tr_weekly					= db.IntegerProperty(long)
-	weapon_headshots_tr_montly					= db.IntegerProperty(long)
-	weapon_headshots_tr_forever					= db.IntegerProperty(long)
-	weapon_headshots_tr_one_life_max			= db.IntegerProperty(long)
+	weapon_headshots_tr_daily					= db.IntegerProperty()
+	weapon_headshots_tr_weekly					= db.IntegerProperty()
+	weapon_headshots_tr_montly					= db.IntegerProperty()
+	weapon_headshots_tr_forever					= db.IntegerProperty()
+	weapon_headshots_tr_one_life_max			= db.IntegerProperty()
 	
-	weapon_headshots_vs_daily					= db.IntegerProperty(long)
-	weapon_headshots_vs_weekly					= db.IntegerProperty(long)
-	weapon_headshots_vs_montly					= db.IntegerProperty(long)
-	weapon_headshots_vs_forever					= db.IntegerProperty(long)
-	weapon_headshots_vs_one_life_max			= db.IntegerProperty(long)
+	weapon_headshots_vs_daily					= db.IntegerProperty()
+	weapon_headshots_vs_weekly					= db.IntegerProperty()
+	weapon_headshots_vs_montly					= db.IntegerProperty()
+	weapon_headshots_vs_forever					= db.IntegerProperty()
+	weapon_headshots_vs_one_life_max			= db.IntegerProperty()
 	
 
 class ClassStatisitics(db.Model):
@@ -501,19 +504,25 @@ class ClubhouseMainPage(webapp2.RequestHandler):
 class OutfitHandler(webapp2.RequestHandler):
 	
 	def get_stat_figures(self, stats, stat_name):
+		logging.info(">>>> get_stat_figures")
 		count = [d for d in stats if d['stat_name'] == stat_name][0]
-		return (int(count['value_daily']), int(count['value_weekly']), int(count['value_monthly']),
+		result = (int(count['value_daily']), int(count['value_weekly']), int(count['value_monthly']),
 			int(count['value_forever']), int(count['value_one_life_max']))
+		logging.info("<<<< get_stat_figures")
+		return result
 	
 	def get_faction_stat_figures(self, stats, stat_name):
+		logging.info(">>>> get_faction_stat_figures")
 		count = [d for d in stats if d['stat_name'] == stat_name][0]
 		nc = (int(count['value_daily_nc']), int(count['value_weekly_nc']), int(count['value_monthly_nc']), int(count['value_forever_nc']), int(count['value_one_life_max_nc']))
 		tr = (int(count['value_daily_tr']), int(count['value_weekly_tr']), int(count['value_monthly_tr']), int(count['value_forever_tr']), int(count['value_one_life_max_tr']))
 		vs = (int(count['value_daily_vs']), int(count['value_weekly_vs']), int(count['value_monthly_vs']), int(count['value_forever_vs']), int(count['value_one_life_max_vs']))
+		logging.info("<<<< get_faction_stat_figures")
 		return(nc,tr,vs)
 	
 	def generate_outfit_data(self, outfit_alias):
 		#logging.info("Calling generate_outfit **************************************************")
+		logging.info(">>>> generate_outfit_data")
 		outfit = Outfit()
 		outfit_data = None
 		
@@ -644,10 +653,142 @@ class OutfitHandler(webapp2.RequestHandler):
 		outfit.members_online = totalStats['online']
 		outfit.put()
 		
+		logging.info("<<<< generate_outfit_data")
+		
+		return outfit
+
+	def cache_outfit_data(self, outfit_alias):
+		logging.info(">>>> cache_outfit_data")
+		all_members = []
+		
+		cache_outfit = False
+		
+		outfit = memcache.get('key')
+		
+		if outfit is None:
+			
+			logging.info("==== cache_outfit_data - no outfit data available, getting data")
+			
+			cache_outfit = True
+			
+			outfit = {}
+			outfit_data = None
+			# get values from URL
+			try :
+				url = NEW_OUTFIT_URL%(outfit_alias)
+				fetch = urlfetch.fetch(url).content
+				outfit_data = json.loads(fetch)['outfit_list'][0]
+			except Exception as e :
+				return None
+			
+			outfit['alias']				= outfit_alias
+			outfit['member_count'] 	= outfit_data['member_count']
+			outfit['name']				= outfit_data['name']
+			outfit['members_online']	= 0
+			
+		logging.info("==== cache_outfit_data - outfit data obtained")
+		
+		for i in range(0,int(outfit['member_count']),MEMBERS_PER_REQUEST):
+			
+			logging.info("==== cache_outfit_data - Batch %i" % (i))
+			
+			batch_key = "%s_batch_%i" % (outfit_alias,i)
+			
+			members = memcache.get(batch_key)
+			
+			if members is None :
+				logging.info("==== cache_outfit_data - No cache available, getting data from soe")
+				
+				# get the next set of character ids from the api
+				try :
+					url = NEW_OUTFIT_CHARACTER_URL%(int(outfit_data['id']),MEMBERS_PER_REQUEST,i)
+					fetch = urlfetch.fetch(url).content
+					member_list = json.loads(fetch)['outfit_member_list']
+				except Exception as e :
+					self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
+					self.response.out.write(e)
+					return	
+				
+				member_id_list = []
+				
+				for member in member_list:
+					member_id_list.append(member['character_id'])
+				
+				# Now get the character information
+				try :
+					url = NEW_MEMBER_URL%(','.join(member_id_list))
+					fetch = urlfetch.fetch(url).content
+					member_list = json.loads(fetch)['character_list']
+				except Exception as e :
+					self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
+					self.response.out.write(e)
+					return	
+				
+				members = []
+				
+				for member in member_list:
+					#logging.info(member)
+					logging.info("==== cache_outfit_data - processing member information : %s" % (member['name']['first']))
+					character = {}
+					character['name']				= member['name']['first']
+					character['id']					= int(member['character_id'])
+					#character['outfit_rank']			= int(member['outfit']['rank_ordinal'])
+					#character['outfit_rank_name']	= member['outfit']['rank']
+					character['battle_rank']			= int(member['battle_rank']['value'])
+					character['last_online']			= datetime.fromtimestamp(int(member['times']['last_login']))
+					#character['outfit_join']			= datetime.fromtimestamp(int(member['outfit']['member_since']))
+					if (member['online_status'] == '0'):
+						character['online_status'] = False
+					if (member['online_status'] == '9'):
+						character['online_status'] = True
+						outfit['members_online']+=1
+					
+					members.append(character)
+					# Stats
+	#				stats = member['character']['stats']['stat']
+	#				char['assist_count_daily, char.assist_count_weekly, char.assist_count_monthly, char.assist_count_forever, char.assist_count_one_life_max = self.get_stat_figures(stats, 'assist_count')
+	#				char['facility_defended_count_daily, char.facility_defended_count_weekly, char.facility_defended_count_monthly, char.facility_defended_count_forever, char.facility_defended_count_one_life_max = self.get_stat_figures(stats, 'facility_defended_count')
+	#				char['medal_count_daily, char.medal_count_weekly, char.medal_count_monthly, char.medal_count_forever, char.medal_count_one_life_max = self.get_stat_figures(stats, 'medal_count')
+	#				char['skill_points_daily, char.skill_points_weekly, char.skill_points_monthly, char.skill_points_forever, char.skill_points_one_life_max = self.get_stat_figures(stats, 'skill_points')
+	#				char['weapon_deaths_daily, char.weapon_deaths_weekly, char.weapon_deaths_monthly, char.weapon_deaths_forever, char.weapon_deaths_one_life_max = self.get_stat_figures(stats, 'weapon_deaths')
+	#				char['weapon_fire_count_daily, char.weapon_fire_count_weekly, char.weapon_fire_count_monthly, char.weapon_fire_count_forever, char.weapon_fire_count_one_life_max = self.get_stat_figures(stats, 'weapon_fire_count')
+	#				char['weapon_hit_count_daily, char.weapon_hit_count_weekly, char.weapon_hit_count_monthly, char.weapon_hit_count_forever, char.weapon_hit_count_one_life_max = self.get_stat_figures(stats, 'weapon_hit_count')
+	#				char['weapon_play_time_daily, char.weapon_play_time_weekly, char.weapon_play_time_monthly, char.weapon_play_time_forever, char.weapon_play_time_one_life_max = self.get_stat_figures(stats, 'weapon_play_time')
+	#				char['weapon_score_daily, char.weapon_score_weekly, char.weapon_score_monthly, char.weapon_score_forever, char.weapon_score_one_life_max = self.get_stat_figures(stats, 'weapon_score')
+	#				
+	#				faction_stats = member['character']['stats']['stat_by_faction']
+	#				facility_capture_count = self.get_faction_stat_figures(faction_stats, 'facility_capture_count')
+	#				char.facility_capture_count_nc_daily, char.facility_capture_count_nc_weekly, char.facility_capture_count_nc_montly, char.facility_capture_count_nc_forever, char.facility_capture_count_nc_one_life_max = facility_capture_count[0] 
+	#				char.facility_capture_count_tr_daily, char.facility_capture_count_tr_weekly, char.facility_capture_count_tr_montly, char.facility_capture_count_tr_forever, char.facility_capture_count_tr_one_life_max = facility_capture_count[1] 
+	#				char.facility_capture_count_vs_daily, char.facility_capture_count_vs_weekly, char.facility_capture_count_vs_montly, char.facility_capture_count_vs_forever, char.facility_capture_count_vs_one_life_max = facility_capture_count[2]
+					
+					
+					#char.revenge_count_nc, char.revenge_count_tr, char.revenge_count_vs	= self.get_faction_stat_figures(faction_stats, 'revenge_count')
+					#char.weapon_damage_given_nc, char.weapon_damage_given_tr, char.weapon_damage_given_vs	= self.get_faction_stat_figures(faction_stats, 'weapon_damage_given')
+					#char.weapon_damage_taken_by_nc, char.weapon_damage_taken_by_tr, char.weapon_damage_taken_by_vs	= self.get_faction_stat_figures(faction_stats, 'weapon_damage_taken_by')
+				
+				# add tp the memcache
+				logging.info("==== cache_outfit_data - cacheing batch : %s" % (batch_key))
+				memcache.set(key=batch_key, value=members, time=CACHE_TIME_IN_SECONDS)
+
+			all_members += members
+
+		
+		logging.info("<<<< cache_outfit_data")
+		
+		# cache the outfit info
+		if cache_outfit :
+			memcache.set(key=outfit_alias, value=outfit, time=CACHE_TIME_IN_SECONDS)
+		
+		
+		outfit['members'] = all_members
+		
 		return outfit
 
 	
 	def get_outfit_data(self, outfit_alias):
+		logging.info(">>>> get_outfit_data")
+		
 		# try to get the outfits data
 		q = Outfit.all()
 		q.filter("alias =", outfit_alias)
@@ -679,9 +820,12 @@ class OutfitHandler(webapp2.RequestHandler):
 			logging.info("No Cached outfit information found, requesting new data from API")
 			outfit = self.generate_outfit_data(outfit_alias)
 		
+		logging.info("<<<< get_outfit_data")
+		
 		return outfit
 	
 	def get(self):
+		logging.info(">>>> get")
 		
 		# get initial values 
 		outfit=self.request.get('outfit')
@@ -694,36 +838,21 @@ class OutfitHandler(webapp2.RequestHandler):
 			
 		
 		# get the outfit data
-		oo = self.get_outfit_data(outfit)
+		#oo = self.get_outfit_data(outfit)
 		
-		logging.info("OO is :")
-		logging.info(oo)
-		
-		# get data out of the cached data
-		cq = Character.all()
-		cq.ancestor(oo)
-		cq.order("assist_count_daily")
-		#cq.order("outfit_rank")
-		#cq.order("-battle_rank")
-
-		
-		chars = cq.run()
-		
-		members = []
-		for char in chars:
-			#self.response.out.write('%s, %i, %i' % (char.name,char.outfit_rank,char.battle_rank))
-			#self.response.out.write('<br>')
-			members.append(char)
-		
+		outfit_data = self.cache_outfit_data(outfit)
+			
 		template_values = {
-			'outfit': oo,
-			'members': members,
+			'outfit': outfit_data,
+			'members': outfit_data['members'],
 			'classes': CLASSES,
-			'offsets': BR_OFFSETS
+			'offsets': BR_OFFSETS,
 		}
 		
 		template = jinja_environment.get_template('outfit_page.html')
 		self.response.out.write(template.render(template_values))
+		
+		logging.info("<<<< get")
 
 		
 class Guestbook(webapp2.RequestHandler):
