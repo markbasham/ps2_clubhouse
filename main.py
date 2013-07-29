@@ -46,6 +46,7 @@ MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2-beta/outfit_member/%i?c:limit=%
 
 NEW_OUTFIT_URL = 'http://census.soe.com/s:mb/get/ps2/outfit/?alias=%s'
 NEW_OUTFIT_CHARACTER_URL = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?c:limit=%i&c:start=%i'
+NEW_OUTFIT_CHARACTER_URL_NONE = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?c:limit=%i'
 NEW_MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2/character/%s?c:resolve=stat,stat_by_faction,online_status'
 
 DEFAULT_SORT = 'joined'
@@ -99,6 +100,30 @@ ENEMY2 = {
 	
 
 STAT_TYPES = ['stats_daily','stats_weekly','stats_monthly','stats']
+
+CHARACTER_STATS = [	'assist_count',
+					'facility_defended_count',
+					'medal_count',
+					'skill_points',
+					'weapon_deaths',
+					'weapon_fire_count',
+					'weapon_hit_count',
+					'weapon_play_time',
+					'weapon_score']
+
+CLASS_STATS = [	'deaths',
+				'score',
+				'play_time',
+				'fire_count',
+				'hit_count',
+				]
+
+CHARACTER_CLASSES = {	'1':"Infiltrator",
+						'3':"Light Assault",
+						'4':"Combat Medic",
+						'5':"Engineer",
+						'6':"Heavy Assault",
+						'7':"MAX"}
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
@@ -511,6 +536,24 @@ class OutfitHandler(webapp2.RequestHandler):
 		logging.info("<<<< get_stat_figures")
 		return result
 	
+	def get_stat_timings(self, stats, stat_name):
+		result = {}
+		try :
+			count = [d for d in stats if d['stat_name'] == stat_name][0]
+			result['daily']			= int(count['value_daily'])
+			result['weekly']		= int(count['value_weekly'])
+			result['monthly']		= int(count['value_monthly'])
+			result['forever']		= int(count['value_forever'])
+			result['one_life_max']	= int(count['value_one_life_max'])
+		except :
+			result['daily']			= 0
+			result['weekly']		= 0
+			result['monthly']		= 0
+			result['forever']		= 0
+			result['one_life_max']	= 0
+		
+		return result
+	
 	def get_faction_stat_figures(self, stats, stat_name):
 		logging.info(">>>> get_faction_stat_figures")
 		count = [d for d in stats if d['stat_name'] == stat_name][0]
@@ -661,15 +704,11 @@ class OutfitHandler(webapp2.RequestHandler):
 		logging.info(">>>> cache_outfit_data")
 		all_members = []
 		
-		cache_outfit = False
-		
-		outfit = memcache.get('key')
+		outfit = memcache.get(outfit_alias)
 		
 		if outfit is None:
 			
 			logging.info("==== cache_outfit_data - no outfit data available, getting data")
-			
-			cache_outfit = True
 			
 			outfit = {}
 			outfit_data = None
@@ -682,11 +721,33 @@ class OutfitHandler(webapp2.RequestHandler):
 				return None
 			
 			outfit['alias']				= outfit_alias
-			outfit['member_count'] 	= outfit_data['member_count']
+			outfit['member_count'] 		= int(outfit_data['member_count'])
 			outfit['name']				= outfit_data['name']
+			outfit['id']				= int(outfit_data['id'])
 			outfit['members_online']	= 0
+			outfit['member_dict']		= {}
+			outfit['member_ids']		= []
 			
-		logging.info("==== cache_outfit_data - outfit data obtained")
+			logging.info("==== cache_outfit_data - outfit data obtained")
+			
+			# we should now get a full readout of all the outfit members
+			try :
+				url = NEW_OUTFIT_CHARACTER_URL_NONE%(outfit['id'],outfit['member_count'])
+				fetch = urlfetch.fetch(url).content
+				member_list = json.loads(fetch)['outfit_member_list']
+				for member in member_list:
+					outfit['member_ids'].append(member['character_id'])
+					outfit['member_dict'][member['character_id']] = member
+					
+			except Exception as e :
+				self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
+				self.response.out.write(e)
+				return	
+			
+			logging.info("==== cache_outfit_data - outfit members obtained")
+			
+			# cache the outfit info
+			memcache.set(key=outfit_alias, value=outfit, time=CACHE_TIME_IN_SECONDS)
 		
 		for i in range(0,int(outfit['member_count']),MEMBERS_PER_REQUEST):
 			
@@ -695,24 +756,14 @@ class OutfitHandler(webapp2.RequestHandler):
 			batch_key = "%s_batch_%i" % (outfit_alias,i)
 			
 			members = memcache.get(batch_key)
-			
-			if members is None :
+		
+			if members is None:
+				
 				logging.info("==== cache_outfit_data - No cache available, getting data from soe")
 				
-				# get the next set of character ids from the api
-				try :
-					url = NEW_OUTFIT_CHARACTER_URL%(int(outfit_data['id']),MEMBERS_PER_REQUEST,i)
-					fetch = urlfetch.fetch(url).content
-					member_list = json.loads(fetch)['outfit_member_list']
-				except Exception as e :
-					self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
-					self.response.out.write(e)
-					return	
+				member_id_list = outfit['member_ids'][i:i+MEMBERS_PER_REQUEST]
 				
-				member_id_list = []
-				
-				for member in member_list:
-					member_id_list.append(member['character_id'])
+				logging.info(','.join(member_id_list))
 				
 				# Now get the character information
 				try :
@@ -726,36 +777,41 @@ class OutfitHandler(webapp2.RequestHandler):
 				
 				members = []
 				
-				for member in member_list:
-					#logging.info(member)
+				for member in member_list :
+					#logging.info(pprint.pformat(member))
 					logging.info("==== cache_outfit_data - processing member information : %s" % (member['name']['first']))
 					character = {}
-					character['name']				= member['name']['first']
-					character['id']					= int(member['character_id'])
-					#character['outfit_rank']			= int(member['outfit']['rank_ordinal'])
-					#character['outfit_rank_name']	= member['outfit']['rank']
+					character['name']					= member['name']['first']
+					character['id']						= int(member['character_id'])
+					character['outfit_rank']			= int( outfit['member_dict'][member['character_id']]['rank_ordinal'])
+					character['outfit_rank_name']		= outfit['member_dict'][member['character_id']]['rank']
 					character['battle_rank']			= int(member['battle_rank']['value'])
 					character['last_online']			= datetime.fromtimestamp(int(member['times']['last_login']))
-					#character['outfit_join']			= datetime.fromtimestamp(int(member['outfit']['member_since']))
+					character['outfit_join']			= datetime.fromtimestamp(int(outfit['member_dict'][member['character_id']]['member_since']))
 					if (member['online_status'] == '0'):
 						character['online_status'] = False
 					if (member['online_status'] == '9'):
 						character['online_status'] = True
 						outfit['members_online']+=1
 					
-					members.append(character)
 					# Stats
-	#				stats = member['character']['stats']['stat']
-	#				char['assist_count_daily, char.assist_count_weekly, char.assist_count_monthly, char.assist_count_forever, char.assist_count_one_life_max = self.get_stat_figures(stats, 'assist_count')
-	#				char['facility_defended_count_daily, char.facility_defended_count_weekly, char.facility_defended_count_monthly, char.facility_defended_count_forever, char.facility_defended_count_one_life_max = self.get_stat_figures(stats, 'facility_defended_count')
-	#				char['medal_count_daily, char.medal_count_weekly, char.medal_count_monthly, char.medal_count_forever, char.medal_count_one_life_max = self.get_stat_figures(stats, 'medal_count')
-	#				char['skill_points_daily, char.skill_points_weekly, char.skill_points_monthly, char.skill_points_forever, char.skill_points_one_life_max = self.get_stat_figures(stats, 'skill_points')
-	#				char['weapon_deaths_daily, char.weapon_deaths_weekly, char.weapon_deaths_monthly, char.weapon_deaths_forever, char.weapon_deaths_one_life_max = self.get_stat_figures(stats, 'weapon_deaths')
-	#				char['weapon_fire_count_daily, char.weapon_fire_count_weekly, char.weapon_fire_count_monthly, char.weapon_fire_count_forever, char.weapon_fire_count_one_life_max = self.get_stat_figures(stats, 'weapon_fire_count')
-	#				char['weapon_hit_count_daily, char.weapon_hit_count_weekly, char.weapon_hit_count_monthly, char.weapon_hit_count_forever, char.weapon_hit_count_one_life_max = self.get_stat_figures(stats, 'weapon_hit_count')
-	#				char['weapon_play_time_daily, char.weapon_play_time_weekly, char.weapon_play_time_monthly, char.weapon_play_time_forever, char.weapon_play_time_one_life_max = self.get_stat_figures(stats, 'weapon_play_time')
-	#				char['weapon_score_daily, char.weapon_score_weekly, char.weapon_score_monthly, char.weapon_score_forever, char.weapon_score_one_life_max = self.get_stat_figures(stats, 'weapon_score')
-	#				
+					stats = member['stats']['stat']
+					
+					character_stats = [d for d in stats if d['profile_id'] == '0']
+					
+					for stat in CHARACTER_STATS:
+						character[stat] = self.get_stat_timings(character_stats, stat)
+					
+					character['classes'] = []
+					for class_key in CHARACTER_CLASSES.keys() :
+						class_stats = [d for d in stats if d['profile_id'] == class_key]
+						class_values = {}
+						for stat in CLASS_STATS:
+							class_values[stat] = self.get_stat_timings(class_stats, stat)
+						class_values['class'] = CHARACTER_CLASSES[class_key]
+						
+						character['classes'].append(class_values)
+					
 	#				faction_stats = member['character']['stats']['stat_by_faction']
 	#				facility_capture_count = self.get_faction_stat_figures(faction_stats, 'facility_capture_count')
 	#				char.facility_capture_count_nc_daily, char.facility_capture_count_nc_weekly, char.facility_capture_count_nc_montly, char.facility_capture_count_nc_forever, char.facility_capture_count_nc_one_life_max = facility_capture_count[0] 
@@ -767,19 +823,15 @@ class OutfitHandler(webapp2.RequestHandler):
 					#char.weapon_damage_given_nc, char.weapon_damage_given_tr, char.weapon_damage_given_vs	= self.get_faction_stat_figures(faction_stats, 'weapon_damage_given')
 					#char.weapon_damage_taken_by_nc, char.weapon_damage_taken_by_tr, char.weapon_damage_taken_by_vs	= self.get_faction_stat_figures(faction_stats, 'weapon_damage_taken_by')
 				
+					members.append(character)
+				
 				# add tp the memcache
 				logging.info("==== cache_outfit_data - cacheing batch : %s" % (batch_key))
-				memcache.set(key=batch_key, value=members, time=CACHE_TIME_IN_SECONDS)
-
+				memcache.set(key=batch_key, value=members, time=CACHE_TIME_IN_SECONDS+20)
+			
 			all_members += members
-
 		
-		logging.info("<<<< cache_outfit_data")
-		
-		# cache the outfit info
-		if cache_outfit :
-			memcache.set(key=outfit_alias, value=outfit, time=CACHE_TIME_IN_SECONDS)
-		
+		logging.info("<<<< cache_outfit_data")		
 		
 		outfit['members'] = all_members
 		
@@ -841,7 +893,14 @@ class OutfitHandler(webapp2.RequestHandler):
 		#oo = self.get_outfit_data(outfit)
 		
 		outfit_data = self.cache_outfit_data(outfit)
-			
+		
+		# now process the data
+		outfit_data['members'].sort(key=lambda k:k['assist_count']['one_life_max'], reverse=True)
+		
+		for member in outfit_data['members']:
+			member['classes'].sort(key=lambda k:k['play_time']['daily'], reverse=True)
+				
+		
 		template_values = {
 			'outfit': outfit_data,
 			'members': outfit_data['members'],
