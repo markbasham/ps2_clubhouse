@@ -115,8 +115,19 @@ CLASS_STATS = [	'deaths',
 				'score',
 				'play_time',
 				'fire_count',
-				'hit_count',
-				]
+				'hit_count']
+
+FACTION_STATS = [	'domination_count',
+					'revenge_count',
+					'weapon_kills',
+					'weapon_headshots',
+					'weapon_damage_given',
+					'weapon_damage_taken_by',
+					'facility_capture_count',
+					'weapon_vehicle_kills']
+
+FACTION_CLASS_STATS = [	'kills',
+						'killed_by']
 
 CHARACTER_CLASSES = {	'1':"Infiltrator",
 						'3':"Light Assault",
@@ -563,6 +574,25 @@ class OutfitHandler(webapp2.RequestHandler):
 		logging.info("<<<< get_faction_stat_figures")
 		return(nc,tr,vs)
 	
+	def get_faction_stat_timings(self, stats, stat_name):
+		result = {'nc':{},'tr':{},'vs':{}}
+		for key in result.keys() :
+			try :
+				count = [d for d in stats if d['stat_name'] == stat_name][0]
+				result[key]['daily']			= int(count['value_daily_'+key])
+				result[key]['weekly']			= int(count['value_weekly_'+key])
+				result[key]['monthly']			= int(count['value_monthly_'+key])
+				result[key]['forever']			= int(count['value_forever_'+key])
+				result[key]['one_life_max']		= int(count['value_one_life_max_'+key])
+			except :
+				result[key]['daily']			= 0
+				result[key]['weekly']			= 0
+				result[key]['monthly']			= 0
+				result[key]['forever']			= 0
+				result[key]['one_life_max']		= 0
+			
+		return result
+	
 	def generate_outfit_data(self, outfit_alias):
 		#logging.info("Calling generate_outfit **************************************************")
 		logging.info(">>>> generate_outfit_data")
@@ -802,6 +832,13 @@ class OutfitHandler(webapp2.RequestHandler):
 					for stat in CHARACTER_STATS:
 						character[stat] = self.get_stat_timings(character_stats, stat)
 					
+					
+					faction_stats = member['stats']['stat_by_faction']
+					character_stats = [d for d in faction_stats if d['profile_id'] == '0']
+					for stat in FACTION_STATS:
+						character[stat] = self.get_faction_stat_timings(character_stats, stat)
+					
+					
 					character['classes'] = []
 					for class_key in CHARACTER_CLASSES.keys() :
 						class_stats = [d for d in stats if d['profile_id'] == class_key]
@@ -810,19 +847,14 @@ class OutfitHandler(webapp2.RequestHandler):
 							class_values[stat] = self.get_stat_timings(class_stats, stat)
 						class_values['class'] = CHARACTER_CLASSES[class_key]
 						
+						faction_class_stats = [d for d in faction_stats if d['profile_id'] == class_key]
+						
+						for stat in FACTION_CLASS_STATS:
+							class_values[stat] = self.get_faction_stat_timings(faction_class_stats, stat)
+						class_values['class'] = CHARACTER_CLASSES[class_key]
+						
 						character['classes'].append(class_values)
 					
-	#				faction_stats = member['character']['stats']['stat_by_faction']
-	#				facility_capture_count = self.get_faction_stat_figures(faction_stats, 'facility_capture_count')
-	#				char.facility_capture_count_nc_daily, char.facility_capture_count_nc_weekly, char.facility_capture_count_nc_montly, char.facility_capture_count_nc_forever, char.facility_capture_count_nc_one_life_max = facility_capture_count[0] 
-	#				char.facility_capture_count_tr_daily, char.facility_capture_count_tr_weekly, char.facility_capture_count_tr_montly, char.facility_capture_count_tr_forever, char.facility_capture_count_tr_one_life_max = facility_capture_count[1] 
-	#				char.facility_capture_count_vs_daily, char.facility_capture_count_vs_weekly, char.facility_capture_count_vs_montly, char.facility_capture_count_vs_forever, char.facility_capture_count_vs_one_life_max = facility_capture_count[2]
-					
-					
-					#char.revenge_count_nc, char.revenge_count_tr, char.revenge_count_vs	= self.get_faction_stat_figures(faction_stats, 'revenge_count')
-					#char.weapon_damage_given_nc, char.weapon_damage_given_tr, char.weapon_damage_given_vs	= self.get_faction_stat_figures(faction_stats, 'weapon_damage_given')
-					#char.weapon_damage_taken_by_nc, char.weapon_damage_taken_by_tr, char.weapon_damage_taken_by_vs	= self.get_faction_stat_figures(faction_stats, 'weapon_damage_taken_by')
-				
 					members.append(character)
 				
 				# add tp the memcache
