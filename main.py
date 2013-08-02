@@ -565,6 +565,7 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		return result
 	
+	
 	def get_faction_stat_figures(self, stats, stat_name):
 		logging.info(">>>> get_faction_stat_figures")
 		count = [d for d in stats if d['stat_name'] == stat_name][0]
@@ -575,8 +576,15 @@ class OutfitHandler(webapp2.RequestHandler):
 		return(nc,tr,vs)
 	
 	def get_faction_stat_timings(self, stats, stat_name):
-		result = {'nc':{},'tr':{},'vs':{}}
-		for key in result.keys() :
+		result = {'nc':{},'tr':{},'vs':{}, 'all':{}}
+					
+		result['all']['daily']			= 0
+		result['all']['weekly']			= 0
+		result['all']['monthly']		= 0
+		result['all']['forever']		= 0
+		result['all']['one_life_max']	= 0
+		
+		for key in ['nc','vs','tr'] :
 			try :
 				count = [d for d in stats if d['stat_name'] == stat_name][0]
 				result[key]['daily']			= int(count['value_daily_'+key])
@@ -591,6 +599,37 @@ class OutfitHandler(webapp2.RequestHandler):
 				result[key]['forever']			= 0
 				result[key]['one_life_max']		= 0
 			
+			result['all']['daily']			+= result[key]['daily']
+			result['all']['weekly']			+= result[key]['weekly']
+			result['all']['monthly']		+= result[key]['monthly']
+			result['all']['forever']		+= result[key]['forever']
+			result['all']['one_life_max']	+= result[key]['one_life_max']
+
+		return result
+
+	def get_kill_per_death_stats(self, character):
+		result = {}
+		try :
+			result['daily']			= float(character['weapon_kills']['all']['daily'])/float(character['weapon_deaths']['daily'])
+		except :
+			result['daily']			= 0.
+		try :
+			result['weekly']		= float(character['weapon_kills']['all']['weekly'])/float(character['weapon_deaths']['weekly'])
+		except :
+			result['weekly']		= 0.
+		try :
+			result['monthly']		= float(character['weapon_kills']['all']['monthly'])/float(character['weapon_deaths']['monthly'])
+		except :
+			result['monthly']		= 0.
+		try :
+			result['forever']		= float(character['weapon_kills']['all']['forever'])/float(character['weapon_deaths']['forever']) 
+		except :
+			result['forever']		= 0.
+		try :
+			result['one_life_max']	= float(character['weapon_kills']['all']['one_life_max'])/float(character['weapon_deaths']['one_life_max'])
+		except :
+			result['one_life_max']	= 0.
+		
 		return result
 	
 	def generate_outfit_data(self, outfit_alias):
@@ -855,6 +894,10 @@ class OutfitHandler(webapp2.RequestHandler):
 						
 						character['classes'].append(class_values)
 					
+					# finaly put together some other stats
+					
+					character['kills_per_death'] = self.get_kill_per_death_stats(character)
+					
 					members.append(character)
 				
 				# add tp the memcache
@@ -927,7 +970,9 @@ class OutfitHandler(webapp2.RequestHandler):
 		outfit_data = self.cache_outfit_data(outfit)
 		
 		# now process the data
-		outfit_data['members'].sort(key=lambda k:k['assist_count']['one_life_max'], reverse=True)
+		outfit_data['members'].sort(key=lambda k:k['kills_per_death']['weekly'], reverse=True)
+		
+		logging.info(pprint.pformat(outfit_data['members'][0]))
 		
 		for member in outfit_data['members']:
 			member['classes'].sort(key=lambda k:k['play_time']['daily'], reverse=True)
