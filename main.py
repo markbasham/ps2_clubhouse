@@ -98,6 +98,11 @@ ENEMY2 = {
 	'vs':'nc'
 	}
 	
+TIMES = {'daily' : 'Daily',
+		'weekly' : 'Weekly',
+		'monthly': 'Monthly',
+		'forever': 'All time'}
+	
 
 STAT_TYPES = ['stats_daily','stats_weekly','stats_monthly','stats']
 
@@ -135,6 +140,15 @@ CHARACTER_CLASSES = {	'1':"Infiltrator",
 						'5':"Engineer",
 						'6':"Heavy Assault",
 						'7':"MAX"}
+
+CLASS_IMAGES = {
+	'Infiltrator':'http://census.soe.com/img/ps2-beta/icon/67/item',
+	'Heavy Assault':'http://census.soe.com/img/ps2-beta/icon/7/item',
+	'Light Assault':'http://census.soe.com/img/ps2-beta/icon/8/item',
+	'Engineer':'http://census.soe.com/img/ps2-beta/icon/66/item',
+	'Combat Medic':'http://census.soe.com/img/ps2-beta/icon/9/item',
+	'MAX':'http://census.soe.com/img/ps2-beta/icon/68/item'
+	}
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
@@ -632,6 +646,32 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		return result
 	
+	def get_score_per_minute_stats(self, character):
+		result = {}
+		try :
+			result['daily']			= float(character['weapon_score']['daily'])/(float(character['weapon_play_time']['daily'])/60)
+		except :
+			result['daily']			= 0.
+		try :
+			result['weekly']		= float(character['weapon_score']['weekly'])/(float(character['weapon_play_time']['weekly'])/60)
+		except :
+			result['weekly']		= 0.
+		try :
+			result['monthly']		= float(character['weapon_score']['monthly'])/(float(character['weapon_play_time']['monthly'])/60)
+		except :
+			result['monthly']		= 0.
+		try :
+			result['forever']		= float(character['weapon_score']['forever'])/(float(character['weapon_play_time']['forever'])/60) 
+		except :
+			result['forever']		= 0.
+		try :
+			result['one_life_max']	= float(character['weapon_score']['one_life_max'])/(float(character['weapon_play_time']['one_life_max'])/60)
+		except :
+			result['one_life_max']	= 0.
+		
+		return result
+	
+	
 	def generate_outfit_data(self, outfit_alias):
 		#logging.info("Calling generate_outfit **************************************************")
 		logging.info(">>>> generate_outfit_data")
@@ -897,6 +937,7 @@ class OutfitHandler(webapp2.RequestHandler):
 					# finaly put together some other stats
 					
 					character['kills_per_death'] = self.get_kill_per_death_stats(character)
+					character['score_per_min'] = self.get_score_per_minute_stats(character)
 					
 					members.append(character)
 				
@@ -970,8 +1011,12 @@ class OutfitHandler(webapp2.RequestHandler):
 		outfit_data = self.cache_outfit_data(outfit)
 		
 		# now process the data
-		outfit_data['members'].sort(key=lambda k:k['kills_per_death']['weekly'], reverse=True)
-		
+		sorts = {}
+		for t in ['daily','weekly','monthly','forever']:
+			sorts[t] = sorted(outfit_data['members'],key=lambda k:k['score_per_min'][t], reverse=True)
+			for member in sorts[t]:
+				member['classes'].sort(key=lambda k:k['play_time'][t], reverse=True)
+			
 		logging.info(pprint.pformat(outfit_data['members'][0]))
 		
 		for member in outfit_data['members']:
@@ -979,10 +1024,12 @@ class OutfitHandler(webapp2.RequestHandler):
 				
 		
 		template_values = {
-			'outfit': outfit_data,
-			'members': outfit_data['members'],
-			'classes': CLASSES,
-			'offsets': BR_OFFSETS,
+			'outfit'		: outfit_data,
+			'sorts'			: sorts,
+			'classes'		: CLASSES,
+			'offsets'		: BR_OFFSETS,
+			'times'			: TIMES,
+			'class_images'	: CLASS_IMAGES
 		}
 		
 		template = jinja_environment.get_template('outfit_page.html')

@@ -16,32 +16,36 @@
 	<h2 style="color:white"> {{ outfit['alias'] }} : {{ outfit['member_count'] }} Members {{ outfit['members_online'] }} Online Now.</h2>
 
 	<br>
-		
+	
+	{% for time in ['daily','weekly','monthly','forever'] %}	
+	<h3 style="color:white"> {{ times[time] }} statistics </h3>
 	<table border='0' width=100% style="color:white" valign="middle">
 		<tr >
 			<td width='32'> </td>
+			<td> </td>
 			<td> Name </td>
-			<td> BR </td>
-			<td> Kills </td>
-			<td> Deaths </td>
+			<td> Score/Min </td>
 			<td> K/D ratio </td>
+			<td> Kills </td>
 			<td> assist count </td>
 			<td> most played class </td>
+			<td> </td>
 		</tr>
 	
-        {% for member in members %}
+        {% for member in sorts[time] %}
 	    <tr > 
 		    <td width='32'><img src="http://census.soe.com/img/ps2-beta/icon/{{ offsets['tr'] + member['battle_rank'] }}/item" width=32> </img> </td>
-			<td >{{ member['outfit_rank_name'] }} {{ member['name'] }}</td>
 			<td >{{ member['battle_rank'] }}</td>
-			<td >{{ member['weapon_kills']['all']['daily'] }}/{{ member['weapon_kills']['all']['weekly'] }}/{{ member['weapon_kills']['all']['monthly'] }}/{{ member['weapon_kills']['all']['forever'] }}/{{ member['weapon_kills']['all']['one_life_max'] }}</td>
-			<td >{{ member['weapon_deaths']['daily'] }}/{{ member['weapon_deaths']['weekly'] }}/{{ member['weapon_deaths']['monthly'] }}/{{ member['weapon_deaths']['forever'] }}/{{ member['weapon_deaths']['one_life_max'] }}</td>
-            <td >{{ member['kills_per_death']['daily'] }}/{{ member['kills_per_death']['weekly'] }}/{{ member['kills_per_death']['monthly'] }}/{{ member['kills_per_death']['forever'] }}/{{ member['kills_per_death']['one_life_max'] }}</td>
-            <td >{{ member['assist_count']['daily'] }}/{{ member['assist_count']['weekly'] }}/{{ member['assist_count']['monthly'] }}/{{ member['assist_count']['forever'] }}/{{ member['assist_count']['one_life_max'] }}</td>
+			<td >{{ member['outfit_rank_name'] }}, {{ member['name'] }}</td>
+			<td >{{ "%10.1f" % member['score_per_min'][time] }}</td>
+            <td >{{ "%10.1f" % member['kills_per_death'][time] }}</td>
+            <td >{{ member['weapon_kills']['all'][time] }}</td>
+            <td >{{ member['assist_count'][time] }}</td>
 			<td >{{ member['classes'][0]['class'] }}</td>
+			<td ><img src="{{ class_images[member['classes'][0]['class']] }}" width=32> </img>
 		</tr>
 	    {% endfor %}
     </table>
-
+    {% endfor %}
   </body>
 </html>
