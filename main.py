@@ -621,51 +621,51 @@ class OutfitHandler(webapp2.RequestHandler):
 
 		return result
 
-	def get_kill_per_death_stats(self, character):
+	def get_kill_per_death_stats(self, kills, deaths):
 		result = {}
 		try :
-			result['daily']			= float(character['weapon_kills']['all']['daily'])/float(character['weapon_deaths']['daily'])
+			result['daily']			= float(kills['daily'])/float(deaths['daily'])
 		except :
 			result['daily']			= 0.
 		try :
-			result['weekly']		= float(character['weapon_kills']['all']['weekly'])/float(character['weapon_deaths']['weekly'])
+			result['weekly']		= float(kills['weekly'])/float(deaths['weekly'])
 		except :
 			result['weekly']		= 0.
 		try :
-			result['monthly']		= float(character['weapon_kills']['all']['monthly'])/float(character['weapon_deaths']['monthly'])
+			result['monthly']		= float(kills['monthly'])/float(deaths['monthly'])
 		except :
 			result['monthly']		= 0.
 		try :
-			result['forever']		= float(character['weapon_kills']['all']['forever'])/float(character['weapon_deaths']['forever']) 
+			result['forever']		= float(kills['forever'])/float(deaths['forever']) 
 		except :
 			result['forever']		= 0.
 		try :
-			result['one_life_max']	= float(character['weapon_kills']['all']['one_life_max'])/float(character['weapon_deaths']['one_life_max'])
+			result['one_life_max']	= float(kills['one_life_max'])/float(deaths['one_life_max'])
 		except :
 			result['one_life_max']	= 0.
 		
 		return result
 	
-	def get_score_per_minute_stats(self, character):
+	def get_score_per_minute_stats(self, score, play_time):
 		result = {}
 		try :
-			result['daily']			= float(character['weapon_score']['daily'])/(float(character['weapon_play_time']['daily'])/60)
+			result['daily']			= float(score['daily'])/(float(play_time['daily'])/60)
 		except :
 			result['daily']			= 0.
 		try :
-			result['weekly']		= float(character['weapon_score']['weekly'])/(float(character['weapon_play_time']['weekly'])/60)
+			result['weekly']		= float(score['weekly'])/(float(play_time['weekly'])/60)
 		except :
 			result['weekly']		= 0.
 		try :
-			result['monthly']		= float(character['weapon_score']['monthly'])/(float(character['weapon_play_time']['monthly'])/60)
+			result['monthly']		= float(score['monthly'])/(float(play_time['monthly'])/60)
 		except :
 			result['monthly']		= 0.
 		try :
-			result['forever']		= float(character['weapon_score']['forever'])/(float(character['weapon_play_time']['forever'])/60) 
+			result['forever']		= float(score['forever'])/(float(play_time['forever'])/60) 
 		except :
 			result['forever']		= 0.
 		try :
-			result['one_life_max']	= float(character['weapon_score']['one_life_max'])/(float(character['weapon_play_time']['one_life_max'])/60)
+			result['one_life_max']	= float(score['one_life_max'])/(float(play_time['one_life_max'])/60)
 		except :
 			result['one_life_max']	= 0.
 		
@@ -939,12 +939,18 @@ class OutfitHandler(webapp2.RequestHandler):
 						
 						# finaly put together some other stats
 						
-						character['kills_per_death'] = self.get_kill_per_death_stats(character)
-						character['score_per_min'] = self.get_score_per_minute_stats(character)
+						character['kills_per_death'] = self.get_kill_per_death_stats(character['weapon_kills']['all'], character['weapon_deaths'])
+						character['score_per_min'] = self.get_score_per_minute_stats(character['weapon_score'], character['weapon_play_time'])
+						
+						for clazz in character['classes']:
+							clazz['kills_per_death'] = self.get_kill_per_death_stats(clazz['kills']['all'], clazz['deaths'])
+							clazz['score_per_min'] = self.get_score_per_minute_stats(clazz['score'], clazz['play_time'])
+						
 						
 						members.append(character)
-					except :
+					except Exception as e :
 						logging.info("Failed to add member")
+						logging.info(e)
 					
 				# add tp the memcache
 				logging.info("==== cache_outfit_data - cacheing batch : %s" % (batch_key))

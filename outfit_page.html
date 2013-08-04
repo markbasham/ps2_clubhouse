@@ -15,9 +15,15 @@
 	<H4 style="color:white"> {{ outfit['name'] }} </H4> 	
 	<h2 style="color:white"> {{ outfit['alias'] }} : {{ outfit['member_count'] }} Members {{ outfit['members_online'] }} Online Now.</h2>
 
+    <a href="#daily">Daily Statistics</a>
+    <a href="#weekly">Weekly Statistics</a>
+    <a href="#monthly">Monthly Statistics</a>
+    <a href="#forever">All Time Statistics</a>
+
 	<br>
 	
-	{% for time in ['daily','weekly','monthly','forever'] %}	
+	{% for time in ['daily','weekly','monthly','forever'] %}
+	<a name={{time}}></a>
 	<h3 style="color:white"> {{ times[time] }} statistics </h3>
 	<table border='0' width=100% style="color:white" valign="middle">
 		<tr >
@@ -28,9 +34,12 @@
 			<td> Score/Min </td>
 			<td> K/D ratio </td>
 			<td> Kills </td>
-			<td> assist count </td>
 			<td> most played class </td>
-			<td> </td>
+			<td> Score/min </td>
+			<td> K/D </td>
+			<td> next played class </td>
+            <td> Score/min </td>
+            <td> K/D </td>
 		</tr>
 	
 	    {% set position = 0 %}
@@ -44,9 +53,12 @@
 			<td >{{ "%10.2f" % member['score_per_min'][time] }}</td>
             <td >{{ "%10.2f" % member['kills_per_death'][time] }}</td>
             <td >{{ member['weapon_kills']['all'][time] }}</td>
-            <td >{{ member['assist_count'][time] }}</td>
-			<td >{{ member['classes'][0]['class'] }}</td>
-			<td ><img src="{{ class_images[member['classes'][0]['class']] }}" width=32> </img>
+            <td ><img src="{{ class_images[member['classes'][0]['class']] }}" width=32> </img> </td>
+			<td >{{ "%10.2f" % member['classes'][0]['score_per_min'][time] }}</td>
+			<td >{{ "%10.2f" % member['classes'][0]['kills_per_death'][time] }}</td>
+			<td ><img src="{{ class_images[member['classes'][1]['class']] }}" width=32> </img> </td>
+            <td >{{ "%10.2f" % member['classes'][1]['score_per_min'][time] }}</td>
+            <td >{{ "%10.2f" % member['classes'][1]['kills_per_death'][time] }}</td>
 		</tr>
 	    {% endfor %}
     </table>
