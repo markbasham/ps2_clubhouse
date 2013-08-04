@@ -34,12 +34,12 @@
 			<td> Score/Min </td>
 			<td> K/D ratio </td>
 			<td> Kills </td>
-			<td> most played class </td>
-			<td> Score/min </td>
-			<td> K/D </td>
-			<td> next played class </td>
-            <td> Score/min </td>
-            <td> K/D </td>
+			{% for clazz in [1,2,3,4,5] %}
+                 <td >Class</td>
+                 <td >Score/min</td>
+                 <td >K/D</td>
+                 <td >Kills</td>
+            {% endfor %}
 		</tr>
 	
 	    {% set position = 0 %}
@@ -53,12 +53,12 @@
 			<td >{{ "%10.2f" % member['score_per_min'][time] }}</td>
             <td >{{ "%10.2f" % member['kills_per_death'][time] }}</td>
             <td >{{ member['weapon_kills']['all'][time] }}</td>
-            <td ><img src="{{ class_images[member['classes'][0]['class']] }}" width=32> </img> </td>
-			<td >{{ "%10.2f" % member['classes'][0]['score_per_min'][time] }}</td>
-			<td >{{ "%10.2f" % member['classes'][0]['kills_per_death'][time] }}</td>
-			<td ><img src="{{ class_images[member['classes'][1]['class']] }}" width=32> </img> </td>
-            <td >{{ "%10.2f" % member['classes'][1]['score_per_min'][time] }}</td>
-            <td >{{ "%10.2f" % member['classes'][1]['kills_per_death'][time] }}</td>
+            {% for clazz in member['class_sort'][time] %}
+                 <td ><img src="{{ class_images[clazz['class']] }}" width=32> </img> </td>
+			     <td >{{ "%10.2f" % clazz['score_per_min'][time] }}</td>
+			     <td >{{ "%10.2f" % clazz['kills_per_death'][time] }}</td>
+			     <td >{{ "%10.2f" % clazz['kills']['all'][time] }}</td>
+			{% endfor %}
 		</tr>
 	    {% endfor %}
     </table>

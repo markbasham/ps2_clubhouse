@@ -626,23 +626,23 @@ class OutfitHandler(webapp2.RequestHandler):
 		try :
 			result['daily']			= float(kills['daily'])/float(deaths['daily'])
 		except :
-			result['daily']			= 0.
+			result['daily']			= float(kills['daily'])
 		try :
 			result['weekly']		= float(kills['weekly'])/float(deaths['weekly'])
 		except :
-			result['weekly']		= 0.
+			result['weekly']		= float(kills['weekly'])
 		try :
 			result['monthly']		= float(kills['monthly'])/float(deaths['monthly'])
 		except :
-			result['monthly']		= 0.
+			result['monthly']		= float(kills['monthly'])
 		try :
 			result['forever']		= float(kills['forever'])/float(deaths['forever']) 
 		except :
-			result['forever']		= 0.
+			result['forever']		= float(kills['forever'])
 		try :
 			result['one_life_max']	= float(kills['one_life_max'])/float(deaths['one_life_max'])
 		except :
-			result['one_life_max']	= 0.
+			result['one_life_max']	= float(kills['one_life_max'])
 		
 		return result
 	
@@ -1021,19 +1021,24 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		outfit_data = self.cache_outfit_data(outfit)
 		
-		# now process the data
-		sorts = {}
-		for t in ['daily','weekly','monthly','forever']:
-			sorts[t] = sorted(outfit_data['members'],key=lambda k:k['kills_per_death'][t], reverse=True)
-			for member in sorts[t]:
-				member['classes'].sort(key=lambda k:k['play_time'][t], reverse=True)
-			
-		logging.info(pprint.pformat(outfit_data['members'][0]))
-		
 		outfit_data['members_online'] = 0
 		for member in outfit_data['members']:
 			if member['online_status'] :
 				outfit_data['members_online'] += 1
+			member['class_sort'] = {}
+			member['class_sort']['daily'] = sorted(member['classes'],   key=lambda k:k['kills']['all']['daily'], reverse=True)
+			member['class_sort']['weekly'] = sorted(member['classes'],  key=lambda k:k['kills']['all']['weekly'], reverse=True)
+			member['class_sort']['monthly'] = sorted(member['classes'], key=lambda k:k['kills']['all']['monthly'], reverse=True)
+			member['class_sort']['forever'] = sorted(member['classes'], key=lambda k:k['kills']['all']['forever'], reverse=True)
+		
+		# now process the data
+		sorts = {}
+		for t in ['daily','weekly','monthly','forever']:
+			sorts[t] = sorted(outfit_data['members'],key=lambda k:k['kills_per_death'][t], reverse=True)
+			
+		logging.info(pprint.pformat(outfit_data['members'][0]))
+		
+		
 				
 		
 		template_values = {
