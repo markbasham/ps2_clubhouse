@@ -889,58 +889,61 @@ class OutfitHandler(webapp2.RequestHandler):
 				for member in member_list :
 					#logging.info(pprint.pformat(member))
 					logging.info("==== cache_outfit_data - processing member information : %s" % (member['name']['first']))
-					character = {}
-					character['name']					= member['name']['first']
-					character['id']						= int(member['character_id'])
-					character['outfit_rank']			= int( outfit['member_dict'][member['character_id']]['rank_ordinal'])
-					character['outfit_rank_name']		= outfit['member_dict'][member['character_id']]['rank']
-					character['battle_rank']			= int(member['battle_rank']['value'])
-					character['last_online']			= datetime.fromtimestamp(int(member['times']['last_login']))
-					character['outfit_join']			= datetime.fromtimestamp(int(outfit['member_dict'][member['character_id']]['member_since']))
-					if (member['online_status'] == '0'):
-						character['online_status'] = False
-					if (member['online_status'] == '9'):
-						character['online_status'] = True
-						outfit['members_online']+=1
-					
-					# Stats
-					stats = member['stats']['stat']
-					
-					character_stats = [d for d in stats if d['profile_id'] == '0']
-					
-					for stat in CHARACTER_STATS:
-						character[stat] = self.get_stat_timings(character_stats, stat)
-					
-					
-					faction_stats = member['stats']['stat_by_faction']
-					character_stats = [d for d in faction_stats if d['profile_id'] == '0']
-					for stat in FACTION_STATS:
-						character[stat] = self.get_faction_stat_timings(character_stats, stat)
-					
-					
-					character['classes'] = []
-					for class_key in CHARACTER_CLASSES.keys() :
-						class_stats = [d for d in stats if d['profile_id'] == class_key]
-						class_values = {}
-						for stat in CLASS_STATS:
-							class_values[stat] = self.get_stat_timings(class_stats, stat)
-						class_values['class'] = CHARACTER_CLASSES[class_key]
+					try :
+						character = {}
+						character['name']					= member['name']['first']
+						character['id']						= int(member['character_id'])
+						character['outfit_rank']			= int( outfit['member_dict'][member['character_id']]['rank_ordinal'])
+						character['outfit_rank_name']		= outfit['member_dict'][member['character_id']]['rank']
+						character['battle_rank']			= int(member['battle_rank']['value'])
+						character['last_online']			= datetime.fromtimestamp(int(member['times']['last_login']))
+						character['outfit_join']			= datetime.fromtimestamp(int(outfit['member_dict'][member['character_id']]['member_since']))
+						if (member['online_status'] == '0'):
+							character['online_status'] = False
+						if (member['online_status'] == '9'):
+							character['online_status'] = True
+							outfit['members_online']+=1
 						
-						faction_class_stats = [d for d in faction_stats if d['profile_id'] == class_key]
+						# Stats
+						stats = member['stats']['stat']
 						
-						for stat in FACTION_CLASS_STATS:
-							class_values[stat] = self.get_faction_stat_timings(faction_class_stats, stat)
-						class_values['class'] = CHARACTER_CLASSES[class_key]
+						character_stats = [d for d in stats if d['profile_id'] == '0']
 						
-						character['classes'].append(class_values)
+						for stat in CHARACTER_STATS:
+							character[stat] = self.get_stat_timings(character_stats, stat)
+						
+						
+						faction_stats = member['stats']['stat_by_faction']
+						character_stats = [d for d in faction_stats if d['profile_id'] == '0']
+						for stat in FACTION_STATS:
+							character[stat] = self.get_faction_stat_timings(character_stats, stat)
+						
+						
+						character['classes'] = []
+						for class_key in CHARACTER_CLASSES.keys() :
+							class_stats = [d for d in stats if d['profile_id'] == class_key]
+							class_values = {}
+							for stat in CLASS_STATS:
+								class_values[stat] = self.get_stat_timings(class_stats, stat)
+							class_values['class'] = CHARACTER_CLASSES[class_key]
+							
+							faction_class_stats = [d for d in faction_stats if d['profile_id'] == class_key]
+							
+							for stat in FACTION_CLASS_STATS:
+								class_values[stat] = self.get_faction_stat_timings(faction_class_stats, stat)
+							class_values['class'] = CHARACTER_CLASSES[class_key]
+							
+							character['classes'].append(class_values)
+						
+						# finaly put together some other stats
+						
+						character['kills_per_death'] = self.get_kill_per_death_stats(character)
+						character['score_per_min'] = self.get_score_per_minute_stats(character)
+						
+						members.append(character)
+					except :
+						logging.info("Failed to add member")
 					
-					# finaly put together some other stats
-					
-					character['kills_per_death'] = self.get_kill_per_death_stats(character)
-					character['score_per_min'] = self.get_score_per_minute_stats(character)
-					
-					members.append(character)
-				
 				# add tp the memcache
 				logging.info("==== cache_outfit_data - cacheing batch : %s" % (batch_key))
 				memcache.set(key=batch_key, value=members, time=CACHE_TIME_IN_SECONDS+20)
@@ -1014,7 +1017,10 @@ class OutfitHandler(webapp2.RequestHandler):
 		sorts = {}
 		for t in ['daily','weekly','monthly','forever']:
 			sorts[t] = sorted(outfit_data['members'],key=lambda k:k['score_per_min'][t], reverse=True)
+			pos = 0;
 			for member in sorts[t]:
+				member['position'] = pos
+				pos += 1
 				member['classes'].sort(key=lambda k:k['play_time'][t], reverse=True)
 			
 		logging.info(pprint.pformat(outfit_data['members'][0]))
