@@ -858,6 +858,8 @@ class OutfitHandler(webapp2.RequestHandler):
 			# cache the outfit info
 			memcache.set(key=outfit_alias, value=outfit, time=CACHE_TIME_IN_SECONDS)
 		
+		logging.info("==== **** members online is %i" % outfit['members_online'])
+		
 		for i in range(0,int(outfit['member_count']),MEMBERS_PER_REQUEST):
 			
 			logging.info("==== cache_outfit_data - Batch %i" % (i))
@@ -1016,17 +1018,16 @@ class OutfitHandler(webapp2.RequestHandler):
 		# now process the data
 		sorts = {}
 		for t in ['daily','weekly','monthly','forever']:
-			sorts[t] = sorted(outfit_data['members'],key=lambda k:k['score_per_min'][t], reverse=True)
-			pos = 0;
+			sorts[t] = sorted(outfit_data['members'],key=lambda k:k['kills_per_death'][t], reverse=True)
 			for member in sorts[t]:
-				member['position'] = pos
-				pos += 1
 				member['classes'].sort(key=lambda k:k['play_time'][t], reverse=True)
 			
 		logging.info(pprint.pformat(outfit_data['members'][0]))
 		
+		outfit_data['members_online'] = 0
 		for member in outfit_data['members']:
-			member['classes'].sort(key=lambda k:k['play_time']['daily'], reverse=True)
+			if member['online_status'] :
+				outfit_data['members_online'] += 1
 				
 		
 		template_values = {
