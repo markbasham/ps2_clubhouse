@@ -649,23 +649,23 @@ class OutfitHandler(webapp2.RequestHandler):
 	def get_score_per_minute_stats(self, score, play_time):
 		result = {}
 		try :
-			result['daily']			= float(score['daily'])/(float(play_time['daily'])/60)
+			result['daily']			= float(score['daily'])/(float(play_time['daily'])/60.)
 		except :
 			result['daily']			= 0.
 		try :
-			result['weekly']		= float(score['weekly'])/(float(play_time['weekly'])/60)
+			result['weekly']		= float(score['weekly'])/(float(play_time['weekly'])/60.)
 		except :
 			result['weekly']		= 0.
 		try :
-			result['monthly']		= float(score['monthly'])/(float(play_time['monthly'])/60)
+			result['monthly']		= float(score['monthly'])/(float(play_time['monthly'])/60.)
 		except :
 			result['monthly']		= 0.
 		try :
-			result['forever']		= float(score['forever'])/(float(play_time['forever'])/60) 
+			result['forever']		= float(score['forever'])/(float(play_time['forever'])/60.) 
 		except :
 			result['forever']		= 0.
 		try :
-			result['one_life_max']	= float(score['one_life_max'])/(float(play_time['one_life_max'])/60)
+			result['one_life_max']	= float(score['one_life_max'])/(float(play_time['one_life_max'])/60.)
 		except :
 			result['one_life_max']	= 0.
 		
@@ -943,9 +943,7 @@ class OutfitHandler(webapp2.RequestHandler):
 						character['score_per_min'] = self.get_score_per_minute_stats(character['weapon_score'], character['weapon_play_time'])
 						
 						for clazz in character['classes']:
-							clazz['kills_per_death'] = self.get_kill_per_death_stats(clazz['kills']['all'], clazz['deaths'])
 							clazz['score_per_min'] = self.get_score_per_minute_stats(clazz['score'], clazz['play_time'])
-						
 						
 						members.append(character)
 					except Exception as e :
@@ -1026,17 +1024,17 @@ class OutfitHandler(webapp2.RequestHandler):
 			if member['online_status'] :
 				outfit_data['members_online'] += 1
 			member['class_sort'] = {}
-			member['class_sort']['daily'] = sorted(member['classes'],   key=lambda k:k['kills']['all']['daily'], reverse=True)
-			member['class_sort']['weekly'] = sorted(member['classes'],  key=lambda k:k['kills']['all']['weekly'], reverse=True)
-			member['class_sort']['monthly'] = sorted(member['classes'], key=lambda k:k['kills']['all']['monthly'], reverse=True)
-			member['class_sort']['forever'] = sorted(member['classes'], key=lambda k:k['kills']['all']['forever'], reverse=True)
+			member['class_sort']['daily'] = sorted(member['classes'],   key=lambda k:k['score_per_min']['daily'], reverse=True)
+			member['class_sort']['weekly'] = sorted(member['classes'],  key=lambda k:k['score_per_min']['weekly'], reverse=True)
+			member['class_sort']['monthly'] = sorted(member['classes'], key=lambda k:k['score_per_min']['monthly'], reverse=True)
+			member['class_sort']['forever'] = sorted(member['classes'], key=lambda k:k['score_per_min']['forever'], reverse=True)
 		
 		# now process the data
 		sorts = {}
 		for t in ['daily','weekly','monthly','forever']:
 			sorts[t] = sorted(outfit_data['members'],key=lambda k:k['kills_per_death'][t], reverse=True)
 			
-		logging.info(pprint.pformat(outfit_data['members'][0]))
+		#logging.info(pprint.pformat(outfit_data['members'][0]))
 		
 		
 				
