@@ -49,7 +49,8 @@ NEW_OUTFIT_CHARACTER_URL = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?
 NEW_OUTFIT_CHARACTER_URL_NONE = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?c:limit=%i'
 NEW_MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2/character/%s?c:resolve=stat,stat_by_faction,online_status'
 
-DEFAULT_SORT = 'joined'
+DEFAULT_SORT = 'kills_per_death'
+
 SORT_TYPE = {
 	'joined':[(itemgetter('member_since'),False),
 		(itemgetter('online_status'),False)],
@@ -592,11 +593,11 @@ class OutfitHandler(webapp2.RequestHandler):
 	def get_faction_stat_timings(self, stats, stat_name):
 		result = {'nc':{},'tr':{},'vs':{}, 'all':{}}
 					
-		result['all']['daily']			= 0
-		result['all']['weekly']			= 0
-		result['all']['monthly']		= 0
-		result['all']['forever']		= 0
-		result['all']['one_life_max']	= 0
+		result['daily']			= 0
+		result['weekly']			= 0
+		result['monthly']		= 0
+		result['forever']		= 0
+		result['one_life_max']	= 0
 		
 		for key in ['nc','vs','tr'] :
 			try :
@@ -613,11 +614,11 @@ class OutfitHandler(webapp2.RequestHandler):
 				result[key]['forever']			= 0
 				result[key]['one_life_max']		= 0
 			
-			result['all']['daily']			+= result[key]['daily']
-			result['all']['weekly']			+= result[key]['weekly']
-			result['all']['monthly']		+= result[key]['monthly']
-			result['all']['forever']		+= result[key]['forever']
-			result['all']['one_life_max']	+= result[key]['one_life_max']
+			result['daily']			+= result[key]['daily']
+			result['weekly']		+= result[key]['weekly']
+			result['monthly']		+= result[key]['monthly']
+			result['forever']		+= result[key]['forever']
+			result['one_life_max']	+= result[key]['one_life_max']
 
 		return result
 
@@ -939,7 +940,7 @@ class OutfitHandler(webapp2.RequestHandler):
 						
 						# finaly put together some other stats
 						
-						character['kills_per_death'] = self.get_kill_per_death_stats(character['weapon_kills']['all'], character['weapon_deaths'])
+						character['kills_per_death'] = self.get_kill_per_death_stats(character['weapon_kills'], character['weapon_deaths'])
 						character['score_per_min'] = self.get_score_per_minute_stats(character['weapon_score'], character['weapon_play_time'])
 						
 						for clazz in character['classes']:
@@ -1032,9 +1033,9 @@ class OutfitHandler(webapp2.RequestHandler):
 		# now process the data
 		sorts = {}
 		for t in ['daily','weekly','monthly','forever']:
-			sorts[t] = sorted(outfit_data['members'],key=lambda k:k['kills_per_death'][t], reverse=True)
+			sorts[t] = sorted(outfit_data['members'],key=lambda k:k[sort][t], reverse=True)
 			
-		#logging.info(pprint.pformat(outfit_data['members'][0]))
+		logging.info(pprint.pformat(outfit_data['members'][0]))
 		
 		
 				
