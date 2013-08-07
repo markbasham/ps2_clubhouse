@@ -36,7 +36,7 @@ import jinja2
 import os
 
 MEMBERS_PER_REQUEST = 50
-CACHE_TIME_IN_SECONDS = 300
+CACHE_TIME_IN_SECONDS = 600
 
 CORE_ID = '37509528949522142'
 PUGZ_ID = '37511770385198092'
@@ -155,7 +155,7 @@ jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
 def get_playtime_class_icon_id(playtime):
-	logging.info(">>>> get_playtime_class_icon_id")
+	##logging.info(">>>> get_playtime_class_icon_id")
 	max = 0
 	id = 0
 	clazzes = []
@@ -163,7 +163,7 @@ def get_playtime_class_icon_id(playtime):
 		value = int(playtime['class'][clazz]['value'])
 		clazzes.append((value,CLASSES_LOWER[clazz]))
 	clazzes.sort(reverse=True)
-	logging.info("<<<< get_playtime_class_icon_id")
+	##logging.info("<<<< get_playtime_class_icon_id")
 	return clazzes
 
 
@@ -555,11 +555,11 @@ class ClubhouseMainPage(webapp2.RequestHandler):
 class OutfitHandler(webapp2.RequestHandler):
 	
 	def get_stat_figures(self, stats, stat_name):
-		logging.info(">>>> get_stat_figures")
+		#logging.info(">>>> get_stat_figures")
 		count = [d for d in stats if d['stat_name'] == stat_name][0]
 		result = (int(count['value_daily']), int(count['value_weekly']), int(count['value_monthly']),
 			int(count['value_forever']), int(count['value_one_life_max']))
-		logging.info("<<<< get_stat_figures")
+		#logging.info("<<<< get_stat_figures")
 		return result
 	
 	def get_stat_timings(self, stats, stat_name):
@@ -582,12 +582,12 @@ class OutfitHandler(webapp2.RequestHandler):
 	
 	
 	def get_faction_stat_figures(self, stats, stat_name):
-		logging.info(">>>> get_faction_stat_figures")
+		#logging.info(">>>> get_faction_stat_figures")
 		count = [d for d in stats if d['stat_name'] == stat_name][0]
 		nc = (int(count['value_daily_nc']), int(count['value_weekly_nc']), int(count['value_monthly_nc']), int(count['value_forever_nc']), int(count['value_one_life_max_nc']))
 		tr = (int(count['value_daily_tr']), int(count['value_weekly_tr']), int(count['value_monthly_tr']), int(count['value_forever_tr']), int(count['value_one_life_max_tr']))
 		vs = (int(count['value_daily_vs']), int(count['value_weekly_vs']), int(count['value_monthly_vs']), int(count['value_forever_vs']), int(count['value_one_life_max_vs']))
-		logging.info("<<<< get_faction_stat_figures")
+		#logging.info("<<<< get_faction_stat_figures")
 		return(nc,tr,vs)
 	
 	def get_faction_stat_timings(self, stats, stat_name):
@@ -674,8 +674,8 @@ class OutfitHandler(webapp2.RequestHandler):
 	
 	
 	def generate_outfit_data(self, outfit_alias):
-		#logging.info("Calling generate_outfit **************************************************")
-		logging.info(">>>> generate_outfit_data")
+		##logging.info("Calling generate_outfit **************************************************")
+		#logging.info(">>>> generate_outfit_data")
 		outfit = Outfit()
 		outfit_data = None
 		
@@ -693,10 +693,10 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		outfit.put()
 		
-		#logging.info(outfit_data)
-		#logging.info(outfit)
+		##logging.info(outfit_data)
+		##logging.info(outfit)
 		
-		#logging.info("outfit data obtained")
+		##logging.info("outfit data obtained")
 		
 		# Now sort out the members themselves
 		members = {}
@@ -756,13 +756,13 @@ class OutfitHandler(webapp2.RequestHandler):
 				'nc':{'kills':0,'caps':0},
 				'defends':0} 
 		
-		#logging.info("total Stats:")
-		#logging.info(totalStats)
+		##logging.info("total Stats:")
+		##logging.info(totalStats)
 		
 		for member in members.values():	
 			char = Character(parent=outfit)
-			logging.info("Character info")
-			#logging.info(pprint.pformat(member))
+			#logging.info("Character info")
+			##logging.info(pprint.pformat(member))
 			char.name = member['character']['name']['first']
 			char.id = int(member['outfit']['character_id'])
 			char.outfit_rank = int(member['outfit']['rank_ordinal'])
@@ -806,19 +806,19 @@ class OutfitHandler(webapp2.RequestHandler):
 		outfit.members_online = totalStats['online']
 		outfit.put()
 		
-		logging.info("<<<< generate_outfit_data")
+		#logging.info("<<<< generate_outfit_data")
 		
 		return outfit
 
 	def cache_outfit_data(self, outfit_alias):
-		logging.info(">>>> cache_outfit_data")
+		#logging.info(">>>> cache_outfit_data")
 		all_members = []
 		
 		outfit = memcache.get(outfit_alias)
 		
 		if outfit is None:
 			
-			logging.info("==== cache_outfit_data - no outfit data available, getting data")
+			#logging.info("==== cache_outfit_data - no outfit data available, getting data")
 			
 			outfit = {}
 			outfit_data = None
@@ -838,7 +838,7 @@ class OutfitHandler(webapp2.RequestHandler):
 			outfit['member_dict']		= {}
 			outfit['member_ids']		= []
 			
-			logging.info("==== cache_outfit_data - outfit data obtained")
+			#logging.info("==== cache_outfit_data - outfit data obtained")
 			
 			# we should now get a full readout of all the outfit members
 			try :
@@ -854,16 +854,16 @@ class OutfitHandler(webapp2.RequestHandler):
 				self.response.out.write(e)
 				return	
 			
-			logging.info("==== cache_outfit_data - outfit members obtained")
+			#logging.info("==== cache_outfit_data - outfit members obtained")
 			
 			# cache the outfit info
 			memcache.set(key=outfit_alias, value=outfit, time=CACHE_TIME_IN_SECONDS)
 		
-		logging.info("==== **** members online is %i" % outfit['members_online'])
+		#logging.info("==== **** members online is %i" % outfit['members_online'])
 		
 		for i in range(0,int(outfit['member_count']),MEMBERS_PER_REQUEST):
 			
-			logging.info("==== cache_outfit_data - Batch %i" % (i))
+			#logging.info("==== cache_outfit_data - Batch %i" % (i))
 			
 			batch_key = "%s_batch_%i" % (outfit_alias,i)
 			
@@ -871,11 +871,11 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 			if members is None:
 				
-				logging.info("==== cache_outfit_data - No cache available, getting data from soe")
+				#logging.info("==== cache_outfit_data - No cache available, getting data from soe")
 				
 				member_id_list = outfit['member_ids'][i:i+MEMBERS_PER_REQUEST]
 				
-				logging.info(','.join(member_id_list))
+				#logging.info(','.join(member_id_list))
 				
 				# Now get the character information
 				try :
@@ -890,15 +890,23 @@ class OutfitHandler(webapp2.RequestHandler):
 				members = []
 				
 				for member in member_list :
-					#logging.info(pprint.pformat(member))
-					logging.info("==== cache_outfit_data - processing member information : %s" % (member['name']['first']))
+					##logging.info(pprint.pformat(member))
+					#logging.info("==== cache_outfit_data - processing member information : %s" % (member['name']['first']))
 					try :
 						character = {}
 						character['name']					= member['name']['first']
 						character['id']						= int(member['character_id'])
-						character['outfit_rank']			= int( outfit['member_dict'][member['character_id']]['rank_ordinal'])
+						character['outfit_rank']			= {}
+						character['outfit_rank']['daily']	= int( outfit['member_dict'][member['character_id']]['rank_ordinal'])
+						character['outfit_rank']['weekly']	= int( outfit['member_dict'][member['character_id']]['rank_ordinal'])
+						character['outfit_rank']['monthly']	= int( outfit['member_dict'][member['character_id']]['rank_ordinal'])
+						character['outfit_rank']['forever']	= int( outfit['member_dict'][member['character_id']]['rank_ordinal'])
 						character['outfit_rank_name']		= outfit['member_dict'][member['character_id']]['rank']
-						character['battle_rank']			= int(member['battle_rank']['value'])
+						character['battle_rank']			= {} 
+						character['battle_rank']['daily']	= int(member['battle_rank']['value'])
+						character['battle_rank']['weekly']	= int(member['battle_rank']['value'])
+						character['battle_rank']['monthly']	= int(member['battle_rank']['value'])
+						character['battle_rank']['forever']	= int(member['battle_rank']['value'])
 						character['last_online']			= datetime.fromtimestamp(int(member['times']['last_login']))
 						character['outfit_join']			= datetime.fromtimestamp(int(outfit['member_dict'][member['character_id']]['member_since']))
 						if (member['online_status'] == '0'):
@@ -957,7 +965,7 @@ class OutfitHandler(webapp2.RequestHandler):
 			
 			all_members += members
 		
-		logging.info("<<<< cache_outfit_data")		
+		#logging.info("<<<< cache_outfit_data")		
 		
 		outfit['members'] = all_members
 		
@@ -965,7 +973,7 @@ class OutfitHandler(webapp2.RequestHandler):
 
 	
 	def get_outfit_data(self, outfit_alias):
-		logging.info(">>>> get_outfit_data")
+		#logging.info(">>>> get_outfit_data")
 		
 		# try to get the outfits data
 		q = Outfit.all()
@@ -975,35 +983,35 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		now = datetime.now()
 		
-		logging.info("Trying to retrieve outfit data for %s ****************************************************" % (outfit_alias))
+		#logging.info("Trying to retrieve outfit data for %s ****************************************************" % (outfit_alias))
 		
 		for o in q.run(limit=5):
 			if (now - o.date).total_seconds() > CACHE_TIME_IN_SECONDS :
-				logging.info("Deleting old outfit %s" % (o.name))
+				#logging.info("Deleting old outfit %s" % (o.name))
 				# we need to delete all the characgter entries which are associated with this
 				cq = Character.all()
 				cq.ancestor(o)
 				
 				for char in cq.run():
-					logging.info("Deleting character %s", char.name)
+					#logging.info("Deleting character %s", char.name)
 					char.delete()
 
 				o.delete()
 			else :
-				logging.info("Appropriate Cached outfit information found")
+				#logging.info("Appropriate Cached outfit information found")
 				outfit = o
 		
 		# so now we have the outfit data, or null, if we have null, then we need to create new outfit data
 		if outfit == None :
-			logging.info("No Cached outfit information found, requesting new data from API")
+			#logging.info("No Cached outfit information found, requesting new data from API")
 			outfit = self.generate_outfit_data(outfit_alias)
 		
-		logging.info("<<<< get_outfit_data")
+		#logging.info("<<<< get_outfit_data")
 		
 		return outfit
 	
 	def get(self):
-		logging.info(">>>> get")
+		#logging.info(">>>> get")
 		
 		# get initial values 
 		outfit=self.request.get('outfit')
@@ -1013,6 +1021,14 @@ class OutfitHandler(webapp2.RequestHandler):
 		sort=self.request.get('sort')
 		if (sort == ""):
 			sort = DEFAULT_SORT
+			
+		sort_order=self.request.get('sort_order')
+		if (sort_order == ""):
+			sort_order = "Reverse" 
+			
+		sort_reverse = False
+		if sort_order == 'Reverse':
+			sort_reverse = True
 			
 		
 		# get the outfit data
@@ -1033,9 +1049,9 @@ class OutfitHandler(webapp2.RequestHandler):
 		# now process the data
 		sorts = {}
 		for t in ['daily','weekly','monthly','forever']:
-			sorts[t] = sorted(outfit_data['members'],key=lambda k:k[sort][t], reverse=True)
+			sorts[t] = sorted(outfit_data['members'],key=lambda k:k[sort][t], reverse=sort_reverse)
 			
-		logging.info(pprint.pformat(outfit_data['members'][0]))
+		##logging.info(pprint.pformat(outfit_data['members'][0]))
 		
 		
 				
@@ -1052,7 +1068,7 @@ class OutfitHandler(webapp2.RequestHandler):
 		template = jinja_environment.get_template('outfit_page.html')
 		self.response.out.write(template.render(template_values))
 		
-		logging.info("<<<< get")
+		##logging.info("<<<< get")
 
 		
 class Guestbook(webapp2.RequestHandler):
