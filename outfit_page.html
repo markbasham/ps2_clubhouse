@@ -49,9 +49,13 @@
             <td >{{ "%10.2f" % member['kills_per_death'][time] }}</td>
             <td >{{ member['weapon_kills'][time] }}</td>
             <td >
+            {% set opacity = 100 %}
+            {% set opacity_float = 1.0 %}
             {% for clazz in member['class_sort'][time] %}
                  {% if clazz['score_per_min'][time] > 0.01 %}
-                    <img src="{{ class_images[clazz['class']] }}" width=32> </img>
+                    <img src="{{ class_images[clazz['class']] }}" width=32 style="opacity:{{opacity_float}};filter:alpha(opacity={{opacity}});"> </img>
+                    {% set opacity = opacity - 15 %}
+                    {% set opacity_float = opacity_float - 0.15 %}
                  {% endif %}
 			{% endfor %}
 			</td>
