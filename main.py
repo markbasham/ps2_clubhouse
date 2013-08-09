@@ -814,9 +814,18 @@ class OutfitHandler(webapp2.RequestHandler):
 		logging.info(">>>> cache_outfit_data")
 		all_members = []
 		
+		#logging.info(">>>> cache_outfit_data ==== members length 1 %i" % (len(all_members)))
+		
 		outfit = memcache.get(outfit_alias)
 		
-		if outfit is None:
+		#logging.info("outfit info from cache")
+		#logging.info(outfit)
+		
+		cached = True
+		
+		if outfit == None:
+			
+			cached = False
 			
 			logging.info("==== cache_outfit_data - no outfit data available, getting data")
 			
@@ -861,6 +870,7 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		logging.info("==== **** members online is %i" % outfit['members_online'])
 		
+		#logging.info(">>>> cache_outfit_data ==== members length 2 %i" % (len(all_members)))
 		
 		fetches = {}
 		
@@ -870,8 +880,11 @@ class OutfitHandler(webapp2.RequestHandler):
 			
 			batch_key = "%s_batch_%i" % (outfit_alias,i)
 			
-			members = memcache.get(batch_key)
-		
+			members = None
+			
+			if cached:
+				members = memcache.get(batch_key)
+			
 			if members is None:
 				
 				logging.info("==== cache_outfit_data - No cache available, getting data from soe for %s" % (batch_key))
@@ -897,6 +910,8 @@ class OutfitHandler(webapp2.RequestHandler):
 				all_members += members
 		
 		
+		#logging.info(">>>> cache_outfit_data ==== members length 3 %i" % (len(all_members)))
+		
 		for key in fetches.keys():
 			
 			logging.info("==== cache_outfit_data - Loading fetched data %s" % (key))
@@ -906,6 +921,7 @@ class OutfitHandler(webapp2.RequestHandler):
 			# Now get the character information
 			try :
 				result = fetches[key].get_result()
+				logging.info("==== cache outfit data fetch result %i" % (result.status_code))
 				logging.info("==== cache_outfit_data Start Json processing")
 				member_list = json.loads(result.content)['character_list']
 				logging.info("==== cache_outfit_data Ending Json processing")
@@ -992,9 +1008,9 @@ class OutfitHandler(webapp2.RequestHandler):
 			# add tp the memcache
 			logging.info("==== cache_outfit_data - cacheing batch : %s" % (batch_key))
 			memcache.set(key=key, value=members, time=CACHE_TIME_IN_SECONDS+20)
-		
-		all_members += members
-	
+			
+			all_members += members
+			
 		#logging.info("<<<< cache_outfit_data")		
 		
 		outfit['members'] = all_members
