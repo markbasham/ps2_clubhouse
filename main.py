@@ -35,7 +35,7 @@ urlfetch.set_default_fetch_deadline(45)
 import jinja2
 import os
 
-MEMBERS_PER_REQUEST = 80
+MEMBERS_PER_REQUEST = 50
 CACHE_TIME_IN_SECONDS = 600
 
 CORE_ID = '37509528949522142'
@@ -928,7 +928,6 @@ class OutfitHandler(webapp2.RequestHandler):
 			except Exception as e :
 				logging.info("Failed to get info from the SOE server, please try again later<br><br>")
 				logging.info(e)
-				return	
 			
 			logging.info("==== cache_outfit_data member_list obtained %s ************************************" % (key))
 			members = []
@@ -1006,7 +1005,7 @@ class OutfitHandler(webapp2.RequestHandler):
 			logging.info("==== cache_outfit_data Processing Complete ************************************")
 				
 			# add tp the memcache
-			logging.info("==== cache_outfit_data - cacheing batch : %s" % (batch_key))
+			logging.info("==== cache_outfit_data - cacheing batch : %s" % (key))
 			memcache.set(key=key, value=members, time=CACHE_TIME_IN_SECONDS+20)
 			
 			all_members += members
