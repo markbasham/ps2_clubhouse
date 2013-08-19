@@ -49,7 +49,8 @@ NEW_OUTFIT_CHARACTER_URL = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?
 NEW_OUTFIT_CHARACTER_URL_NONE = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?c:limit=%i'
 NEW_MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2/character/%s?c:resolve=stat,stat_by_faction,online_status'
 
-DEFAULT_SORT = 'kills_per_death'
+DEFAULT_SORT = 'outfit_rank'
+DEFAULT_SORT_NEW = 'kills_per_death'
 
 SORT_TYPE = {
 	'joined':[(itemgetter('member_since'),False),
@@ -414,6 +415,7 @@ class Character(db.Model):
 	weapon_headshots_vs_one_life_max			= db.IntegerProperty()
 	
 
+
 class ClassStatisitics(db.Model):
 	# general 
 	score				= db.ListProperty(long)
@@ -428,6 +430,7 @@ class ClassStatisitics(db.Model):
 	kills_nc			= db.ListProperty(long)
 	kills_tr			= db.ListProperty(long)
 	kills_vs			= db.ListProperty(long)
+
 
 def guestbook_key(guestbook_name=None):
 	"""Constructs a Datastore key for a Guestbook entity with guestbook_name."""
@@ -874,9 +877,11 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		fetches = {}
 		
+		fetches_so_far = 0
+		
 		for i in range(0,int(outfit['member_count']),MEMBERS_PER_REQUEST):
 			
-			#logging.info("==== cache_outfit_data - Batch %i" % (i))
+			logging.info("==== cache_outfit_data - Batch %i" % (i))
 			
 			batch_key = "%s_batch_%i" % (outfit_alias,i)
 			
@@ -885,9 +890,10 @@ class OutfitHandler(webapp2.RequestHandler):
 			if cached:
 				members = memcache.get(batch_key)
 			
-			if members is None:
+			if (members is None) and (fetches_so_far < 10) :
 				
 				logging.info("==== cache_outfit_data - No cache available, getting data from soe for %s" % (batch_key))
+				
 				
 				member_id_list = outfit['member_ids'][i:i+MEMBERS_PER_REQUEST]
 				
@@ -899,15 +905,19 @@ class OutfitHandler(webapp2.RequestHandler):
 					rpc = urlfetch.create_rpc()
 					urlfetch.make_fetch_call(rpc, url)
 					fetches[batch_key] = (rpc, url)
-					#fetch = urlfetch.fetch(url).content
-					#member_list = json.loads(fetch)['character_list']
+					# fetch = urlfetch.fetch(url).content
+					# member_list = json.loads(fetch)['character_list']
 				except Exception as e :
 					self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
 					self.response.out.write(e)
 					return	
 				
+				fetches_so_far += 1
+				logging.info("fetches so far is %i" % (fetches_so_far))
+				
 			else :
-				all_members += members
+				if members is not None:
+					all_members += members
 		
 		
 		#logging.info(">>>> cache_outfit_data ==== members length 3 %i" % (len(all_members)))
@@ -1031,10 +1041,11 @@ class OutfitHandler(webapp2.RequestHandler):
 		#logging.info("<<<< cache_outfit_data")		
 		
 		outfit['members'] = all_members
-		
+		outfit['fetches_so_far'] = fetches_so_far
+		outfit['loaded_member_count'] = len(all_members)
 		return outfit
 
-	
+
 	def get_outfit_data(self, outfit_alias):
 		#logging.info(">>>> get_outfit_data")
 		
@@ -1087,7 +1098,7 @@ class OutfitHandler(webapp2.RequestHandler):
 			
 		sort=self.request.get('sort')
 		if (sort == ""):
-			sort = DEFAULT_SORT
+			sort = DEFAULT_SORT_NEW
 			
 		sort_order=self.request.get('sort_order')
 		if (sort_order == ""):
