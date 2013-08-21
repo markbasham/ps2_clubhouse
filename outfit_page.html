@@ -1,4 +1,12 @@
 <html>
+    
+	<head>
+	   {% if outfit['fetches_so_far'] > 0 %}
+	   <meta http-equiv="refresh" content="0" >
+	   {% endif %}
+	</head>
+	
+	
 	<body bgcolor=#000000>
 	
 	<script>
@@ -11,7 +19,14 @@
 		ga('send', 'pageview');
 	</script>
 
+    {% if outfit['fetches_so_far'] > 0 %}
+       <H1 style="color:white"> Outfit Data Loading, please wait {{ outfit['loaded_member_count'] }} of {{ outfit['member_count'] }}</H1>
+       
+    {% endif %}
+    
     <H1 style="color:white">Outfit Summary : {{ outfit['alias'] }}</H1>
+    
+    
 	<H4 style="color:white"> {{ outfit['name'] }} </H4> 	
 	<h2 style="color:white"> {{ outfit['alias'] }} : {{ outfit['member_count'] }} Members {{ outfit['members_online'] }} Online Now.</h2>
 

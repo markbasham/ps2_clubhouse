@@ -44,10 +44,12 @@ PUGZ_ALIAS = 'PUGZ'
 OUTFIT_URL = 'http://census.soe.com/s:mb/get/ps2-beta/outfit/?alias=%s'
 MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2-beta/outfit_member/%i?c:limit=%i&c:start=%i&c:resolve=character(name,type.faction,experience,profile.active_name.en,stats_weekly.kills.faction,stats_weekly.facility_capture_count,stats_weekly.facility_defended_count,stats_weekly.play_time.class,stats_daily.facility_capture_count,stats_daily.facility_defended_count,stats_daily.play_time.class,stats_daily.kills.faction,stats_monthly.facility_capture_count,stats_monthly.facility_defended_count,stats_monthly.play_time.class,stats_monthly.kills.faction,,stats.facility_capture_count,stats.facility_defended_count,stats.play_time.class,stats.kills.faction,times.last_login),online_status'
 
-NEW_OUTFIT_URL = 'http://census.soe.com/s:mb/get/ps2/outfit/?alias=%s'
-NEW_OUTFIT_CHARACTER_URL = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?c:limit=%i&c:start=%i'
-NEW_OUTFIT_CHARACTER_URL_NONE = 'http://census.soe.com/s:mb/get/ps2/outfit_member/%i?c:limit=%i'
-NEW_MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2/character/%s?c:resolve=stat,stat_by_faction,online_status'
+PS2_API = ''
+
+NEW_OUTFIT_URL = 'http://census.soe.com/s:mb/get/ps2:v2/outfit/?alias=%s'
+NEW_OUTFIT_CHARACTER_URL = 'http://census.soe.com/s:mb/get/ps2:v2/outfit_member/%i?c:limit=%i&c:start=%i'
+NEW_OUTFIT_CHARACTER_URL_NONE = 'http://census.soe.com/s:mb/get/ps2:v2/outfit_member/?outfit_id=%i&c:limit=%i'
+NEW_MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2:v2/character/%s?c:resolve=stat,stat_by_faction,online_status'
 
 DEFAULT_SORT = 'outfit_rank'
 DEFAULT_SORT_NEW = 'kills_per_death'
@@ -842,21 +844,27 @@ class OutfitHandler(webapp2.RequestHandler):
 			except Exception as e :
 				return None
 			
-			outfit['alias']				= outfit_alias
-			outfit['member_count'] 		= int(outfit_data['member_count'])
-			outfit['name']				= outfit_data['name']
-			outfit['id']				= int(outfit_data['id'])
-			outfit['members_online']	= 0
-			outfit['member_dict']		= {}
-			outfit['member_ids']		= []
+			#logging.info(pprint.pformat(outfit_data))
+			
+			outfit['alias']					= outfit_alias
+			outfit['member_count'] 			= int(outfit_data['member_count'])
+			outfit['name']					= outfit_data['name']
+			outfit['id']					= int(outfit_data['outfit_id'])
+			outfit['leader_character_id'] 	= outfit_data['leader_character_id']
+			outfit['members_online']		= 0
+			outfit['member_dict']			= {}
+			outfit['member_ids']			= []
 			
 			logging.info("==== cache_outfit_data - outfit data obtained")
 			
 			# we should now get a full readout of all the outfit members
 			try :
+				#logging.info("==== cache_outfit_data - Starting to get member list")
 				url = NEW_OUTFIT_CHARACTER_URL_NONE%(outfit['id'],outfit['member_count'])
 				fetch = urlfetch.fetch(url).content
 				member_list = json.loads(fetch)['outfit_member_list']
+				#logging.info("==== cache_outfit_data - Member list obtained")
+				#logging.info(pprint.pformat(member_list))
 				for member in member_list:
 					outfit['member_ids'].append(member['character_id'])
 					outfit['member_dict'][member['character_id']] = member
@@ -1114,6 +1122,8 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		outfit_data = self.cache_outfit_data(outfit)
 		
+		if outfit_data == None:
+			logging.info("outfit data is None")
 		
 		outfit_data['members_online'] = 0
 		for member in outfit_data['members']:
