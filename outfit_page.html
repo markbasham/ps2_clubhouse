@@ -32,26 +32,26 @@
 
 
     {% if focus_character != None %}
-       <H1 style="color:white">Focus Character Rankings</H1>
+       <H1 style="color:white">Focus Character Rankings : {{ focus_character['outfit_rank_name'] }}, {{ focus_character['name'] }}</H1>
        
         <table border='0' width=100% style="color:white" valign="middle">
         <tr >
-            <td> Place </td>
-            <td width='32'> </td>
-            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=battle_rank&timing={{time}}"> BR </a> </td>
-            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=outfit_rank&timing={{time}}"> Outfit Rank </a>, Name </td>
-            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=score_per_min&timing={{time}}"> Score/Min </a> </td>
-            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_score&timing={{time}}"> Score </a> </td>
-            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=kills_per_death&timing={{time}}"> K/D ratio </a> </td>
-            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}"> Kills </a> </td>
+            <td> Time </td>
+            <td> Ranking </td>
+            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=battle_rank&timing={{time}}&focus_character={{focus_character['name']}}"> BR </a> </td>
+            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=outfit_rank&timing={{time}}&focus_character={{focus_character['name']}}"> Outfit Rank </a>, Name </td>
+            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=score_per_min&timing={{time}}&focus_character={{focus_character['name']}}"> Score/Min </a> </td>
+            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_score&timing={{time}}&focus_character={{focus_character['name']}}"> Score </a> </td>
+            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=kills_per_death&timing={{time}}&focus_character={{focus_character['name']}}"> K/D ratio </a> </td>
+            <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}&focus_character={{focus_character['name']}}"> Kills </a> </td>
             <td> Classes by score/min </td>
         </tr>
     
         {% for time in ['daily','weekly','monthly','forever']: %}
         {% set member = sorts[time][focus_character_sort_position[time]] %}
         <tr > 
+            <td >{{ time }}</td>
             <td >{{ focus_character_sort_position[time] + 1 }}</td>
-            <td width='32'><img src="http://census.soe.com/img/ps2:v2/icon/{{ offsets['tr'] + member['battle_rank']['forever'] }}/item" width=32> </img> </td>
             <td >{{ member['battle_rank']['forever'] }}</td>
             <td >{{ member['outfit_rank_name'] }}, {{ member['name'] }}</td>
             <td >{{ "%10.2f" % member['score_per_min'][time] }}</td>
@@ -79,10 +79,10 @@
 
 
 
-    <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing=daily">Daily Statistics</a>
-    <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing=weekly">Weekly Statistics</a>
-    <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing=monthly">Monthly Statistics</a>
-    <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing=forever">All Time Statistics</a>
+    <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing=daily&focus_character={{focus_character['name']}}">Daily Statistics</a>
+    <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing=weekly&focus_character={{focus_character['name']}}">Weekly Statistics</a>
+    <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing=monthly&focus_character={{focus_character['name']}}">Monthly Statistics</a>
+    <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing=forever&focus_character={{focus_character['name']}}">All Time Statistics</a>
 
 	<br>
 	
@@ -91,12 +91,12 @@
 		<tr >
 		    <td> Place </td>
 			<td width='32'> </td>
-			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=battle_rank&timing={{time}}"> BR </a> </td>
-			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=outfit_rank&timing={{time}}"> Outfit Rank </a>, Name </td>
-			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=score_per_min&timing={{time}}"> Score/Min </a> </td>
-			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_score&timing={{time}}"> Score </a> </td>
-			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=kills_per_death&timing={{time}}"> K/D ratio </a> </td>
-			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}"> Kills </a> </td>
+			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=battle_rank&timing={{time}}&focus_character={{focus_character['name']}}"> BR </a> </td>
+			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=outfit_rank&timing={{time}}&focus_character={{focus_character['name']}}"> Outfit Rank </a>, Name </td>
+			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=score_per_min&timing={{time}}&focus_character={{focus_character['name']}}"> Score/Min </a> </td>
+			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_score&timing={{time}}&focus_character={{focus_character['name']}}"> Score </a> </td>
+			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=kills_per_death&timing={{time}}&focus_character={{focus_character['name']}}"> K/D ratio </a> </td>
+			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}&focus_character={{focus_character['name']}}"> Kills </a> </td>
             <td> Classes by score/min </td>
 		</tr>
 	
@@ -107,7 +107,7 @@
 		    <td >{{ position }}</td>
 		    <td width='32'><img src="http://census.soe.com/img/ps2:v2/icon/{{ offsets['tr'] + member['battle_rank']['forever'] }}/item" width=32> </img> </td>
 			<td >{{ member['battle_rank']['forever'] }}</td>
-			<td >{{ member['outfit_rank_name'] }}, {{ member['name'] }}</td>
+			<td >{{ member['outfit_rank_name'] }}, <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing={{time}}&focus_character={{member['name']}}">{{ member['name'] }}</a></td>
 			<td >{{ "%10.2f" % member['score_per_min'][time] }}</td>
 			<td >{{ member['weapon_score'][time] }}</td>
             <td >{{ "%10.2f" % member['kills_per_death'][time] }}</td>
