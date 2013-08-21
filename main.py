@@ -1116,6 +1116,9 @@ class OutfitHandler(webapp2.RequestHandler):
 		if sort_order == 'Reverse':
 			sort_reverse = True
 			
+		focus_character_name=self.request.get('focus_character')
+		if (focus_character_name == ""):
+			focus_character_name = None 
 		
 		# get the outfit data
 		#oo = self.get_outfit_data(outfit)
@@ -1125,10 +1128,14 @@ class OutfitHandler(webapp2.RequestHandler):
 		if outfit_data == None:
 			logging.info("outfit data is None")
 		
+		focus_character = None
+		
 		outfit_data['members_online'] = 0
 		for member in outfit_data['members']:
 			if member['online_status'] :
 				outfit_data['members_online'] += 1
+			if member['name'] == focus_character_name :
+				focus_character = member
 			member['class_sort'] = {}
 			member['class_sort']['daily'] = sorted(member['classes'],   key=lambda k:k['score_per_min']['daily'], reverse=True)
 			member['class_sort']['weekly'] = sorted(member['classes'],  key=lambda k:k['score_per_min']['weekly'], reverse=True)
@@ -1137,8 +1144,13 @@ class OutfitHandler(webapp2.RequestHandler):
 		
 		# now process the data
 		sorts = {}
+		focus_character_sort_position = {}
 		for t in ['daily','weekly','monthly','forever']:
 			sorts[t] = sorted(outfit_data['members'],key=lambda k:k[sort][t], reverse=sort_reverse)
+			try:
+				focus_character_sort_position[t] = sorts[t].index(focus_character)
+			except:
+				pass
 			
 		##logging.info(pprint.pformat(outfit_data['members'][0]))
 		
@@ -1146,14 +1158,16 @@ class OutfitHandler(webapp2.RequestHandler):
 				
 		
 		template_values = {
-			'outfit'		: outfit_data,
-			'sorts'			: sorts,
-			'classes'		: CLASSES,
-			'offsets'		: BR_OFFSETS,
-			'times'			: TIMES,
-			'class_images'	: CLASS_IMAGES,
-			'time'			: timing,
-			'sort'			: sort
+			'outfit'						: outfit_data,
+			'sorts'							: sorts,
+			'classes'						: CLASSES,
+			'offsets'						: BR_OFFSETS,
+			'times'							: TIMES,
+			'class_images'					: CLASS_IMAGES,
+			'time'							: timing,
+			'sort'							: sort,
+			'focus_character' 				: focus_character,
+			'focus_character_sort_position' : focus_character_sort_position
 		}
 		
 		template = jinja_environment.get_template('outfit_page.html')
