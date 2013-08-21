@@ -146,12 +146,12 @@ CHARACTER_CLASSES = {	'1':"Infiltrator",
 						'7':"MAX"}
 
 CLASS_IMAGES = {
-	'Infiltrator':'http://census.soe.com/img/ps2-beta/icon/67/item',
-	'Heavy Assault':'http://census.soe.com/img/ps2-beta/icon/7/item',
-	'Light Assault':'http://census.soe.com/img/ps2-beta/icon/8/item',
-	'Engineer':'http://census.soe.com/img/ps2-beta/icon/66/item',
-	'Combat Medic':'http://census.soe.com/img/ps2-beta/icon/9/item',
-	'MAX':'http://census.soe.com/img/ps2-beta/icon/68/item'
+	'Infiltrator':'http://census.soe.com/img/ps2:v2/icon/67/item',
+	'Heavy Assault':'http://census.soe.com/img/ps2:v2/icon/7/item',
+	'Light Assault':'http://census.soe.com/img/ps2:v2/icon/8/item',
+	'Engineer':'http://census.soe.com/img/ps2:v2/icon/66/item',
+	'Combat Medic':'http://census.soe.com/img/ps2:v2/icon/9/item',
+	'MAX':'http://census.soe.com/img/ps2:v2/icon/68/item'
 	}
 
 jinja_environment = jinja2.Environment(
