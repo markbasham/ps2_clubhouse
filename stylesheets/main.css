@@ -1,4 +1,8 @@
 body {
   font-family: Verdana, Helvetica, sans-serif;
   background-color: #FFFFFF;
-}
+    background-image:url('http://census.soe.com/img/ps2:v2/icon/20');
+    background-repeat:no-repeat;
+    background-attachment:fixed;
+    background-position:center;
+} 

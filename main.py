@@ -154,6 +154,19 @@ CLASS_IMAGES = {
 	'MAX':'http://census.soe.com/img/ps2:v2/icon/68/item'
 	}
 
+FACTION_IMAGES = {
+	'nc' :'http://census.soe.com/img/ps2:v2/icon/19/item',
+	'tr' :'http://census.soe.com/img/ps2:v2/icon/20/item',
+	'vs' :'http://census.soe.com/img/ps2:v2/icon/21/item'
+	}
+
+FACTIONS = {
+	'1' : 'vs',
+	'2' : 'nc',
+	'3' : 'tr'
+	}
+
+
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
@@ -986,11 +999,13 @@ class OutfitHandler(webapp2.RequestHandler):
 						character['battle_rank']['forever']	= int(member['battle_rank']['value'])
 						character['last_online']			= datetime.fromtimestamp(int(member['times']['last_login']))
 						character['outfit_join']			= datetime.fromtimestamp(int(outfit['member_dict'][member['character_id']]['member_since']))
+						character['faction_id'] 			= member['faction_id']
 						if (member['online_status'] == '0'):
 							character['online_status'] = False
 						if (member['online_status'] == '9'):
 							character['online_status'] = True
 							outfit['members_online']+=1
+						
 						
 						# Stats
 						stats = member['stats']['stat']
@@ -1152,10 +1167,8 @@ class OutfitHandler(webapp2.RequestHandler):
 			except:
 				pass
 			
-		##logging.info(pprint.pformat(outfit_data['members'][0]))
-		
-		
-				
+		#logging.info(pprint.pformat(outfit_data['members'][0]))
+		faction = FACTIONS[outfit_data['members'][0]['faction_id']]
 		
 		template_values = {
 			'outfit'						: outfit_data,
@@ -1167,7 +1180,9 @@ class OutfitHandler(webapp2.RequestHandler):
 			'time'							: timing,
 			'sort'							: sort,
 			'focus_character' 				: focus_character,
-			'focus_character_sort_position' : focus_character_sort_position
+			'focus_character_sort_position' : focus_character_sort_position,
+			'faction_images'				: FACTION_IMAGES,
+			'faction'						: faction
 		}
 		
 		template = jinja_environment.get_template('outfit_page.html')
