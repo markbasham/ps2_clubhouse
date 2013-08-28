@@ -2,7 +2,7 @@
     
 	<head>
 	   {% if outfit['fetches_so_far'] > 0 %}
-	   <meta http-equiv="refresh" content="1" >
+	   <meta http-equiv="refresh" content="2" >
 	   {% endif %}
 	</head>
 	
@@ -43,7 +43,10 @@
                 <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_score&timing={{time}}&focus_character={{focus_character['name']}}"> Score </a> </td>
                 <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=kills_per_death&timing={{time}}&focus_character={{focus_character['name']}}"> K/D ratio </a> </td>
                 <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}&focus_character={{focus_character['name']}}"> Kills </a> </td>
-                <td> Classes by score/min </td>
+                <td> Classes by <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}&focus_character={{focus_character['name']}}&class_sort=score_per_min">score/min</a>
+                <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}&focus_character={{focus_character['name']}}&class_sort=score"> score </a>
+                <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}&focus_character={{focus_character['name']}}&class_sort=playtime"> playtime</a>
+                </td>
             </tr>
         
             {% for time in ['daily','weekly','monthly','forever']: %}
@@ -96,7 +99,10 @@
     			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_score&timing={{time}}&focus_character={{focus_character['name']}}"> Score </a> </td>
     			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=kills_per_death&timing={{time}}&focus_character={{focus_character['name']}}"> K/D ratio </a> </td>
     			<td> <a href="./new?outfit={{ outfit['alias'] }}&sort=weapon_kills&timing={{time}}&focus_character={{focus_character['name']}}"> Kills </a> </td>
-                <td> Classes by score/min </td>
+                <td> Classes by <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing={{time}}&focus_character={{focus_character['name']}}&class_sort=score_per_min">score/min</a>
+                <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing={{time}}&focus_character={{focus_character['name']}}&class_sort=score"> score </a>
+                <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing={{time}}&focus_character={{focus_character['name']}}&class_sort=play_time"> playtime</a>
+                </td>
     		</tr>
     	
     	    {% set position = 0 %}

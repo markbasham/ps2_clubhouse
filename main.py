@@ -53,6 +53,7 @@ NEW_MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2:v2/character/%s?c:resolve=s
 
 DEFAULT_SORT = 'outfit_rank'
 DEFAULT_SORT_NEW = 'kills_per_death'
+DEFAULT_CLASS_SORT_NEW = 'score_per_min'
 
 SORT_TYPE = {
 	'joined':[(itemgetter('member_since'),False),
@@ -1122,7 +1123,11 @@ class OutfitHandler(webapp2.RequestHandler):
 		sort=self.request.get('sort')
 		if (sort == ""):
 			sort = DEFAULT_SORT_NEW
-			
+		
+		class_sort=self.request.get('class_sort')
+		if (class_sort == ""):
+			class_sort = DEFAULT_CLASS_SORT_NEW
+		
 		sort_order=self.request.get('sort_order')
 		if (sort_order == ""):
 			sort_order = "Reverse" 
@@ -1152,10 +1157,10 @@ class OutfitHandler(webapp2.RequestHandler):
 			if member['name'] == focus_character_name :
 				focus_character = member
 			member['class_sort'] = {}
-			member['class_sort']['daily'] = sorted(member['classes'],   key=lambda k:k['score_per_min']['daily'], reverse=True)
-			member['class_sort']['weekly'] = sorted(member['classes'],  key=lambda k:k['score_per_min']['weekly'], reverse=True)
-			member['class_sort']['monthly'] = sorted(member['classes'], key=lambda k:k['score_per_min']['monthly'], reverse=True)
-			member['class_sort']['forever'] = sorted(member['classes'], key=lambda k:k['score_per_min']['forever'], reverse=True)
+			member['class_sort']['daily'] = sorted(member['classes'],   key=lambda k:k[class_sort]['daily'], reverse=True)
+			member['class_sort']['weekly'] = sorted(member['classes'],  key=lambda k:k[class_sort]['weekly'], reverse=True)
+			member['class_sort']['monthly'] = sorted(member['classes'], key=lambda k:k[class_sort]['monthly'], reverse=True)
+			member['class_sort']['forever'] = sorted(member['classes'], key=lambda k:k[class_sort]['forever'], reverse=True)
 		
 		# now process the data
 		sorts = {}
