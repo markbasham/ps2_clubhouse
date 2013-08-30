@@ -46,7 +46,7 @@ MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2-beta/outfit_member/%i?c:limit=%
 
 PS2_API = ''
 
-NEW_OUTFIT_URL = 'http://census.soe.com/s:mb/get/ps2:v2/outfit/?alias=%s'
+NEW_OUTFIT_URL = 'http://census.soe.com/s:mb/get/ps2:v2/outfit/?alias=%s&c:resolve=leader(name,type.faction)'
 NEW_OUTFIT_CHARACTER_URL = 'http://census.soe.com/s:mb/get/ps2:v2/outfit_member/%i?c:limit=%i&c:start=%i'
 NEW_OUTFIT_CHARACTER_URL_NONE = 'http://census.soe.com/s:mb/get/ps2:v2/outfit_member/?outfit_id=%i&c:limit=%i'
 NEW_MEMBER_URL = 'http://census.soe.com/s:mb/get/ps2:v2/character/%s?c:resolve=stat,stat_by_faction,online_status'
@@ -865,6 +865,7 @@ class OutfitHandler(webapp2.RequestHandler):
 			outfit['name']					= outfit_data['name']
 			outfit['id']					= int(outfit_data['outfit_id'])
 			outfit['leader_character_id'] 	= outfit_data['leader_character_id']
+			outfit['leader_name']			= outfit_data['leader']['name']['first']
 			outfit['members_online']		= 0
 			outfit['member_dict']			= {}
 			outfit['member_ids']			= []
@@ -1135,10 +1136,6 @@ class OutfitHandler(webapp2.RequestHandler):
 		sort_reverse = False
 		if sort_order == 'Reverse':
 			sort_reverse = True
-			
-		focus_character_name=self.request.get('focus_character')
-		if (focus_character_name == ""):
-			focus_character_name = None 
 		
 		# get the outfit data
 		#oo = self.get_outfit_data(outfit)
@@ -1148,7 +1145,12 @@ class OutfitHandler(webapp2.RequestHandler):
 		if outfit_data == None:
 			logging.info("outfit data is None")
 		
+		focus_character_name=self.request.get('focus_character')
+		if (focus_character_name == ""):
+			focus_character_name = outfit_data['leader_name'] 
+		
 		focus_character = None
+		
 		
 		outfit_data['members_online'] = 0
 		for member in outfit_data['members']:

@@ -2,7 +2,7 @@
     
 	<head>
 	   {% if outfit['fetches_so_far'] > 0 %}
-	   <meta http-equiv="refresh" content="2" >
+	   <meta http-equiv="refresh" content="0" >
 	   {% endif %}
 	</head>
 	
@@ -20,15 +20,14 @@
 	</script>
 
     {% if outfit['fetches_so_far'] > 0 %}
-       <H1 style="color:white"> {{ outfit['alias'] }} Outfit Data Loading, please wait {{ outfit['loaded_member_count'] }} of {{ outfit['member_count'] }}</H1>
+       <H1 style="color:white"> {{ outfit['alias'] }} Outfit Data Loading, please wait loading {{ outfit['member_count'] }} outfit members</H1>
     {% else %}
     
         <H1 style="color:white">Outfit Summary : {{ outfit['alias'] }}</H1>
         
-        
-    	<H4 style="color:white"> {{ outfit['name'] }} </H4> 	
+    	<H4 style="color:white"> {{ outfit['name'] }} </H4>
+    	<H4 style="color:white"> Outfit Leader : {{ outfit['leader_name'] }} </H4>    
     	<h2 style="color:white"> {{ outfit['alias'] }} : {{ outfit['member_count'] }} Members {{ outfit['members_online'] }} Online Now.</h2>
-    
     
         {% if focus_character != None %}
            <H1 style="color:white">Focus Character Rankings : {{ focus_character['outfit_rank_name'] }}, {{ focus_character['name'] }}</H1>
