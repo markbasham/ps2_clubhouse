@@ -19,6 +19,8 @@
 		ga('send', 'pageview');
 	</script>
 
+    {% set highlight="color:red" %}
+
     {% if outfit['fetches_so_far'] > 0 %}
        <H1 style="color:white"> {{ outfit['alias'] }} Outfit Data Loading, please wait loading {{ outfit['member_count'] }} outfit members {{ outfit['loaded_member_count'] }} so far</H1>
     {% else %}
@@ -34,7 +36,7 @@
            
             <table border='0' width=100% style="color:white" valign="middle">
             <tr >
-                <td> Time </td>
+                <td></td>
                 <td> Ranking </td>
                 <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=battle_rank&timing={{time}}&focus_character={{focus_character['name']}}"> BR </a> </td>
                 <td> <a href="./new?outfit={{ outfit['alias'] }}&sort=outfit_rank&timing={{time}}&focus_character={{focus_character['name']}}"> Outfit Rank </a>, Name </td>
@@ -53,12 +55,12 @@
             <tr > 
                 <td >{{ time }}</td>
                 <td >{{ focus_character_sort_position[time] + 1 }}</td>
-                <td >{{ member['battle_rank']['forever'] }}</td>
-                <td >{{ member['outfit_rank_name'] }}, {{ member['name'] }}</td>
-                <td >{{ "%10.2f" % member['score_per_min'][time] }}</td>
-                <td >{{ member['weapon_score'][time] }}</td>
-                <td >{{ "%10.2f" % member['kills_per_death'][time] }}</td>
-                <td >{{ member['weapon_kills'][time] }}</td>
+                <td style="{% if sort == "battle_rank" %} {{highlight}} {% endif %}">{{ member['battle_rank']['forever'] }}</td>
+                <td style="{% if sort == "outfit_rank" %} {{highlight}} {% endif %}">{{ member['outfit_rank_name'] }}, {{ member['name'] }}</td>
+                <td style="{% if sort == "score_per_min" %} {{highlight}} {% endif %}">{{ "%10.2f" % member['score_per_min'][time] }}</td>
+                <td style="{% if sort == "weapon_score" %} {{highlight}} {% endif %}">{{ member['weapon_score'][time] }}</td>
+                <td style="{% if sort == "kills_per_death" %} {{highlight}} {% endif %}">{{ "%10.2f" % member['kills_per_death'][time] }}</td>
+                <td style="{% if sort == "weapon_kills" %} {{highlight}} {% endif %}">{{ member['weapon_kills'][time] }}</td>
                 <td >
                 {% set opacity = 100 %}
                 {% set opacity_float = 1.0 %}
@@ -110,12 +112,12 @@
     	    <tr > 
     		    <td >{{ position }}</td>
     		    <td width='32'><img src="http://census.soe.com/img/ps2:v2/icon/{{ offsets[faction] + member['battle_rank']['forever'] }}/item" width=32> </img> </td>
-    			<td >{{ member['battle_rank']['forever'] }}</td>
-    			<td >{{ member['outfit_rank_name'] }}, <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing={{time}}&focus_character={{member['name']}}">{{ member['name'] }}</a></td>
-    			<td >{{ "%10.2f" % member['score_per_min'][time] }}</td>
-    			<td >{{ member['weapon_score'][time] }}</td>
-                <td >{{ "%10.2f" % member['kills_per_death'][time] }}</td>
-                <td >{{ member['weapon_kills'][time] }}</td>
+    			<td style="{% if sort == "battle_rank" %} {{highlight}} {% endif %}">{{ member['battle_rank']['forever'] }}</td>
+    			<td style="{% if sort == "outfit_rank" %} {{highlight}} {% endif %}">{{ member['outfit_rank_name'] }}, <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing={{time}}&focus_character={{member['name']}}">{{ member['name'] }}</a></td>
+    			<td style="{% if sort == "score_per_min" %} {{highlight}} {% endif %}">{{ "%10.2f" % member['score_per_min'][time] }}</td>
+    			<td style="{% if sort == "weapon_score" %} {{highlight}} {% endif %}">{{ member['weapon_score'][time] }}</td>
+                <td style="{% if sort == "kills_per_death" %} {{highlight}} {% endif %}">{{ "%10.2f" % member['kills_per_death'][time] }}</td>
+                <td style="{% if sort == "weapon_kills" %} {{highlight}} {% endif %}">{{ member['weapon_kills'][time] }}</td>
                 <td >
                 {% set opacity = 100 %}
                 {% set opacity_float = 1.0 %}
