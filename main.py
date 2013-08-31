@@ -868,7 +868,6 @@ class OutfitHandler(webapp2.RequestHandler):
 			outfit['leader_name']			= outfit_data['leader']['name']['first']
 			outfit['members_online']		= 0
 			outfit['member_dict']			= {}
-			outfit['member_ids']			= []
 			
 			logging.info("==== cache_outfit_data - outfit data obtained")
 			
@@ -881,7 +880,6 @@ class OutfitHandler(webapp2.RequestHandler):
 				#logging.info("==== cache_outfit_data - Member list obtained")
 				#logging.info(pprint.pformat(member_list))
 				for member in member_list:
-					outfit['member_ids'].append(member['character_id'])
 					outfit['member_dict'][member['character_id']] = member
 					
 			except Exception as e :
@@ -918,7 +916,7 @@ class OutfitHandler(webapp2.RequestHandler):
 				logging.info("==== cache_outfit_data - No cache available, getting data from soe for %s" % (batch_key))
 				
 				
-				member_id_list = outfit['member_ids'][i:i+MEMBERS_PER_REQUEST]
+				member_id_list = outfit['member_dict'].keys()[i:i+MEMBERS_PER_REQUEST]
 				
 				#logging.info(','.join(member_id_list))
 				
