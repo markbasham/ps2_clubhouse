@@ -38,7 +38,7 @@
                 <td> Total Score </td>
                 <td> Total Kills </td>
             </tr>
-            {% for rank in rank_stats: %}
+            {% for rank in rank_stats_order: %}
             <tr > 
                 <td >{{ rank }}</td>
                 <td >{{ rank_stats[rank]['members'] }}</td>

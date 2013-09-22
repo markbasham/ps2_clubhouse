@@ -903,6 +903,7 @@ class OutfitHandler(webapp2.RequestHandler):
 			
 			if not member['outfit_rank_name'] in rank_stats :
 				rank_stats[member['outfit_rank_name']] = {
+							'position'		: member['outfit_rank'],
 							'members'		: 0,
 							'score'			: 0,
 							'kills'			: 0
@@ -910,6 +911,8 @@ class OutfitHandler(webapp2.RequestHandler):
 			rank_stats[member['outfit_rank_name']]['members'] += 1
 			rank_stats[member['outfit_rank_name']]['score'] += member['weapon_score']['forever']
 			rank_stats[member['outfit_rank_name']]['kills'] += member['weapon_kills']['forever']
+		
+		rank_stats_order = sorted(rank_stats.keys(), key=lambda k:rank_stats[k]['position'], reverse=True)
 		
 		# now process the data
 		sorts = {}
@@ -938,7 +941,8 @@ class OutfitHandler(webapp2.RequestHandler):
 			'faction_images'				: FACTION_IMAGES,
 			'faction'						: faction,
 			'class_sort'					: class_sort,
-			'rank_stats'					: rank_stats
+			'rank_stats'					: rank_stats,
+			'rank_stats_order'				: rank_stats_order
 		}
 		
 		template = jinja_environment.get_template('outfit_page.html')
