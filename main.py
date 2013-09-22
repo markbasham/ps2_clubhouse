@@ -1111,7 +1111,7 @@ class OutfitHandler(webapp2.RequestHandler):
 		#logging.info(">>>> get")
 		
 		# get initial values 
-		outfit=self.request.get('outfit')
+		outfit=self.request.get('outfit').upper()
 		if (outfit == ""):
 			outfit = PUGZ_ALIAS
 			
@@ -1187,7 +1187,8 @@ class OutfitHandler(webapp2.RequestHandler):
 			'focus_character' 				: focus_character,
 			'focus_character_sort_position' : focus_character_sort_position,
 			'faction_images'				: FACTION_IMAGES,
-			'faction'						: faction
+			'faction'						: faction,
+			'class_sort'					: class_sort
 		}
 		
 		template = jinja_environment.get_template('outfit_page.html')
@@ -1213,5 +1214,5 @@ class Guestbook(webapp2.RequestHandler):
 		self.redirect('/?' + urllib.urlencode({'guestbook_name': guestbook_name}))
 
 			
-app = webapp2.WSGIApplication([('/', OutfitHandler),('/sign', Guestbook),
+app = webapp2.WSGIApplication([('/', ClubhouseMainPage),('/sign', Guestbook),
 							('/test', Test),('/new', OutfitHandler),('/main',ClubhouseMainPage)], debug=True)
