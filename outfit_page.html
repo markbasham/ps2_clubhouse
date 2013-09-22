@@ -31,6 +31,24 @@
     	<H4 style="color:white"> Outfit Leader : {{ outfit['leader_name'] }} </H4>    
     	<h2 style="color:white"> {{ outfit['alias'] }} : {{ outfit['member_count'] }} Members {{ outfit['members_online'] }} Online Now.</h2>
     
+        <table border='0' width=100% style="color:white" valign="middle">
+            <tr >
+                <td> Rank </td>
+                <td> Total Members </td>
+                <td> Total Score </td>
+                <td> Total Kills </td>
+            </tr>
+            {% for rank in rank_stats: %}
+            <tr > 
+                <td >{{ rank }}</td>
+                <td >{{ rank_stats[rank]['members'] }}</td>
+                <td >{{ rank_stats[rank]['score'] }}</td>
+                <td >{{ rank_stats[rank]['kills'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+            
+    
         {% if focus_character != None %}
            <H1 style="color:white">Focus Character Rankings : {{ focus_character['outfit_rank_name'] }}, {{ focus_character['name'] }}</H1>
            
