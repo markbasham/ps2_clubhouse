@@ -573,6 +573,12 @@ class OutfitHandler(webapp2.RequestHandler):
 		#logging.info(">>>> cache_outfit_data ==== members length 1 %i" % (len(all_members)))
 		
 		outfit = memcache.get(outfit_alias)
+		if outfit != None:
+			outfit['member_dict'] = {}
+			for p in range(0, outfit['member_count'], 500) :
+				logging.info(">>>> cache_outfit_data getting %s_%05i"%(outfit_alias,p))
+				dd = memcache.get("%s_%05i"%(outfit_alias,p))
+				outfit['member_dict'].update(dd)
 		
 		#logging.info("outfit info from cache")
 		#logging.info(outfit)
@@ -604,6 +610,11 @@ class OutfitHandler(webapp2.RequestHandler):
 			outfit['leader_character_id'] 	= outfit_data['leader_character_id']
 			outfit['leader_name']			= outfit_data['leader']['name']['first']
 			outfit['members_online']		= 0
+			
+			memcache.set(key=outfit_alias, value=outfit, time=CACHE_TIME_IN_SECONDS)
+			
+			# Now sort out the member dict and cache it
+			
 			outfit['member_dict']			= {}
 			
 			logging.info("==== cache_outfit_data - outfit data obtained")
@@ -614,10 +625,15 @@ class OutfitHandler(webapp2.RequestHandler):
 				url = NEW_OUTFIT_CHARACTER_URL_NONE%(outfit['id'],outfit['member_count'])
 				fetch = urlfetch.fetch(url).content
 				member_list = json.loads(fetch)['outfit_member_list']
-				#logging.info("==== cache_outfit_data - Member list obtained")
-				#logging.info(pprint.pformat(member_list))
-				for member in member_list:
-					outfit['member_dict'][member['character_id']] = member
+				logging.info("==== cache_outfit_data - Member list obtained")
+				logging.info(pprint.pformat(member_list))
+				for p in range(0, len(member_list), 500):
+					dd = {}
+					for member in member_list[p:p+500] :
+						dd[member['character_id']] = member
+					logging.info(pprint.pformat(dd))
+					memcache.set(key="%s_%05i"%(outfit_alias,p), value=dd, time=CACHE_TIME_IN_SECONDS)
+					outfit['member_dict'].update(dd)
 					
 			except Exception as e :
 				self.response.out.write("Failed to get info from the SOE server, please try again later<br><br>")
@@ -625,9 +641,7 @@ class OutfitHandler(webapp2.RequestHandler):
 				return	
 			
 			logging.info("==== cache_outfit_data - outfit members obtained")
-			
-			# cache the outfit info
-			memcache.set(key=outfit_alias, value=outfit, time=CACHE_TIME_IN_SECONDS)
+		
 		
 		logging.info("==== **** members online is %i" % outfit['members_online'])
 		
