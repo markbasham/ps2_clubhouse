@@ -86,9 +86,9 @@ CLASSES_LOWER = {
 	}
 	
 BR_OFFSETS = {
-	'tr':1727,
-	'nc':1627,
-	'vs':1827
+	'tr':3346,
+	'nc':3246,
+	'vs':3446
 	}
 
 ENEMY1 = {
@@ -147,18 +147,18 @@ CHARACTER_CLASSES = {	'1':"Infiltrator",
 						'7':"MAX"}
 
 CLASS_IMAGES = {
-	'Infiltrator':'http://census.soe.com/img/ps2:v2/icon/67/item',
-	'Heavy Assault':'http://census.soe.com/img/ps2:v2/icon/7/item',
-	'Light Assault':'http://census.soe.com/img/ps2:v2/icon/8/item',
-	'Engineer':'http://census.soe.com/img/ps2:v2/icon/66/item',
-	'Combat Medic':'http://census.soe.com/img/ps2:v2/icon/9/item',
-	'MAX':'http://census.soe.com/img/ps2:v2/icon/68/item'
+	'Infiltrator':'https://census.soe.com/files/ps2/images/static/203.png',
+	'Heavy Assault':'https://census.soe.com/files/ps2/images/static/58.png',
+	'Light Assault':'https://census.soe.com/files/ps2/images/static/61.png',
+	'Engineer':'https://census.soe.com/files/ps2/images/static/200.png',
+	'Combat Medic':'https://census.soe.com/files/ps2/images/static/64.png',
+	'MAX':'https://census.soe.com/files/ps2/images/static/206.png'
 	}
 
 FACTION_IMAGES = {
-	'nc' :'http://census.soe.com/img/ps2:v2/icon/19/item',
-	'tr' :'http://census.soe.com/img/ps2:v2/icon/20/item',
-	'vs' :'http://census.soe.com/img/ps2:v2/icon/21/item'
+	'nc' :'https://census.soe.com/files/ps2/images/static/12.png',
+	'tr' :'https://census.soe.com/files/ps2/images/static/18.png',
+	'vs' :'https://census.soe.com/files/ps2/images/static/94.png'
 	}
 
 FACTIONS = {

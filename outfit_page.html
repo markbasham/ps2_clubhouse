@@ -129,7 +129,7 @@
     	    {% set position = position + 1 %}
     	    <tr > 
     		    <td >{{ position }}</td>
-    		    <td width='32'><img src="http://census.soe.com/img/ps2:v2/icon/{{ offsets[faction] + member['battle_rank']['forever'] }}/item" width=32> </img> </td>
+    		    <td width='32'><img src="https://census.soe.com/files/ps2/images/static/{{ offsets[faction] + member['battle_rank']['forever'] }}.png" width=32> </img> </td>
     			<td style="{% if sort == "battle_rank" %} {{highlight}} {% endif %}">{{ member['battle_rank']['forever'] }}</td>
     			<td style="{% if sort == "outfit_rank" %} {{highlight}} {% endif %}">{{ member['outfit_rank_name'] }}, <a href="./new?outfit={{ outfit['alias'] }}&sort={{sort}}&timing={{time}}&focus_character={{member['name']}}&class_sort={{class_sort}}">{{ member['name'] }}</a></td>
     			<td style="{% if sort == "score_per_min" %} {{highlight}} {% endif %}">{{ "%10.2f" % member['score_per_min'][time] }}</td>
@@ -150,7 +150,6 @@
     		</tr>
     	    {% endfor %}
         </table>
-        
        {% endif %}
   </body>
 </html>
